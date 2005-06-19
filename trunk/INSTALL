@@ -1,23 +1,23 @@
-3dengfx 0.1 - installation instructions
+3dengfx 0.5 - installation instructions
 ---------------------------------------
 
-3 step installation....
+If you wish to change the configuration edit 3dengfx_config.h in the src
+subdirectory. You shouldn't need to do that under most circuimstances, the
+defaults are rather reasonable, and there aren't many configuration options
+anyway.
+Then:
 
-1) edit config.h (by hand :) and comment-out the line that says
-	#define SINGLE_PRECISION_MATH
-   if you wish to make the library use floats everywere instead of
-   doubles.
-   No other configuration options available yet
+./configure
+make
+make install
 
-2) make
-3) make install
-
-that's all, ready to use, se README for details
+By default the installation prefix is /usr/local.
 
 Requirements
 ------------
 OpenGL
-SDL
+SDL or GTK (experimental option)
 libpng
-libbz2 (not needed yet under windows, not used)
-Cg toolkit (from nvidia)
+libjpeg
+lib3ds
+freetype 2
