@@ -60,10 +60,6 @@ private:
 	BoundingVolume *bvol;
 	bool bvol_valid;
 	
-	//void render2tex_units();
-	//void render4tex_units();
-	
-	void render8tex_units();
 	void render_hack(unsigned long time);
 
 	void draw_normals();
@@ -75,9 +71,10 @@ public:
 	Object();
 	Object(const TriMesh &mesh);
 	
-	void set_tri_mesh(const TriMesh &mesh);
-	TriMesh *get_tri_mesh_ptr();
-	TriMesh get_tri_mesh() const;
+	void set_mesh(const TriMesh &mesh);
+	TriMesh *get_mesh_ptr();
+	TriMesh &get_mesh();
+	const TriMesh &get_mesh() const;
 
 	// shortcut functions for accessing the geometry easily
 	unsigned long get_vertex_count() const;
@@ -117,6 +114,29 @@ public:
 	void normalize_normals();
 	
 	bool render(unsigned long time = XFORM_LOCAL_PRS);
+};
+
+
+// --- some convinient derived objects for geom. generation ---
+
+class ObjPlane : public Object {
+public:
+	ObjPlane(const Vector3 &normal = Vector3(0, 1, 0), const Vector2 &size = Vector2(1, 1), int subdiv = 0);
+};
+
+class ObjCylinder : public Object {
+public:
+	ObjCylinder(scalar_t rad = 1.0, scalar_t len = 1.0, bool caps = true, int udiv = 12, int vdiv = 0);
+};
+
+class ObjSphere : public Object {
+public:
+	ObjSphere(scalar_t radius = 1.0, int subdiv = 5);
+};
+
+class ObjTorus : public Object {
+public:
+	ObjTorus(scalar_t circle_rad = 0.5, scalar_t revolv_rad = 1.0, int subdiv = 5);
 };
 
 #endif	// _OBJECT_HPP_

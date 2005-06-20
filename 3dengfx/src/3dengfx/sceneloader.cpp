@@ -25,7 +25,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "3dengfx_config.h"
 
-#include <iostream>	// REMOVE
 #include <algorithm>
 
 #include <cstdio>
@@ -60,6 +59,8 @@ static bool load_material(Lib3dsFile *file, const char *name, Material *mat);
 static bool load_keyframes(Lib3dsFile *file, const char *name, Lib3dsNodeTypes type, XFormNode *node);
 static void construct_hierarchy(Lib3dsFile *file, Scene *scene);
 //static void fix_hierarchy(XFormNode *node);
+
+TriMesh *load_mesh_ply(const char *fname);	// defined in ply.cpp
 
 static const char *tex_path(const char *path);
 static std::vector<int> *get_frames(Lib3dsObjectData *o);
@@ -122,6 +123,28 @@ Scene *load_scene(const char *fname) {
 	return scene;
 }
 
+TriMesh *load_mesh(const char *fname, const char *name) {
+	TriMesh *mesh = 0;
+	
+	Lib3dsFile *file = lib3ds_file_load(fname);
+	if(file && name) {
+		Scene *scene = new Scene;
+		load_objects(file, scene);
+
+		Object *obj = scene->get_object(name);
+		if(obj) {
+			mesh = new TriMesh;
+			*mesh = obj->get_mesh();
+		}
+		lib3ds_file_free(file);
+		return mesh;
+	}
+
+	mesh = load_mesh_ply(fname);
+	return mesh;
+}
+	
+
 static bool load_objects(Lib3dsFile *file, Scene *scene) {
 	// load meshes
 	unsigned long poly_count = 0;
@@ -177,8 +200,8 @@ static bool load_objects(Lib3dsFile *file, Scene *scene) {
 			}
 
 			// set the geometry data to the object
-			obj->get_tri_mesh_ptr()->set_data(varray, m->points, tarray, m->faces);
-			obj->get_tri_mesh_ptr()->calculate_normals();
+			obj->get_mesh_ptr()->set_data(varray, m->points, tarray, m->faces);
+			obj->get_mesh_ptr()->calculate_normals();
 		
 			delete [] tarray;
 

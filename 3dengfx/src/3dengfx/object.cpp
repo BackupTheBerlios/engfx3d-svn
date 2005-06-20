@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "camera.hpp"
 #include "gfxprog.hpp"
 #include "texman.hpp"
+#include "ggen.hpp"
 #include "common/err_msg.h"
 
 RenderParams::RenderParams() {
@@ -56,20 +57,24 @@ Object::Object() {
 
 Object::Object(const TriMesh &mesh) {
 	bvol = 0;
-	set_tri_mesh(mesh);
+	set_mesh(mesh);
 }
 
-void Object::set_tri_mesh(const TriMesh &mesh) {
+void Object::set_mesh(const TriMesh &mesh) {
 	this->mesh = mesh;
 	update_bounding_volume();
 }
 
-TriMesh *Object::get_tri_mesh_ptr() {
+TriMesh *Object::get_mesh_ptr() {
 	bvol_valid = false;
 	return &mesh;
 }
 
-TriMesh Object::get_tri_mesh() const {
+TriMesh &Object::get_mesh() {
+	return mesh;
+}
+
+const TriMesh &Object::get_mesh() const {
 	return mesh;
 }
 
@@ -193,8 +198,6 @@ void Object::calculate_normals() {
 void Object::normalize_normals() {
 	mesh.normalize_normals();
 }
-
-void Object::render8tex_units() {}
 
 bool Object::render(unsigned long time) {
 	world_mat = get_prs(time).get_xform_matrix();
@@ -464,4 +467,23 @@ void Object::update_bounding_volume() {
 			if(!dbg++) error("obj \"%s\": only bounding spheres are supported at this point", name.c_str());
 		}
 	}
+}
+
+
+// -------------------------------------
+
+ObjPlane::ObjPlane(const Vector3 &normal, const Vector2 &size, int subdiv) {
+	create_plane(get_mesh_ptr(), normal, size, subdiv);
+}
+
+ObjCylinder::ObjCylinder(scalar_t rad, scalar_t len, bool caps, int udiv, int vdiv) {
+	create_cylinder(get_mesh_ptr(), rad, len, caps, udiv, vdiv);
+}
+
+ObjSphere::ObjSphere(scalar_t radius, int subdiv) {
+	create_sphere(get_mesh_ptr(), radius, subdiv);
+}
+
+ObjTorus::ObjTorus(scalar_t circle_rad, scalar_t revolv_rad, int subdiv) {
+	create_torus(get_mesh_ptr(), circle_rad, revolv_rad, subdiv);
 }

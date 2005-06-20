@@ -313,7 +313,7 @@ void Scene::render(unsigned long msec) const {
 
 		if(!rp.hidden) {
 			if(obj->render(msec)) {
-				poly_count += obj->get_tri_mesh_ptr()->get_triangle_array()->get_count();
+				poly_count += obj->get_mesh_ptr()->get_triangle_array()->get_count();
 			}
 		}
 	}
