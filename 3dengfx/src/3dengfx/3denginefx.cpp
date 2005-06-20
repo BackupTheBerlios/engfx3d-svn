@@ -385,6 +385,25 @@ bool create_graphics_context(const GraphicsInitParameters &gip) {
 #endif	// GTK
 }
 
+/*
+ * short graphics context creation
+ * creates a graphics context (windowed or fullscreen)
+ * given only the wanted resolution and a fullscreen flag.
+ */
+bool create_graphics_context(int x, int y, bool fullscreen)
+{
+	GraphicsInitParameters gip;
+	gip.x = x;
+	gip.y = y;
+	gip.bpp = 32;
+	gip.depth_bits = 32;
+	gip.fullscreen = fullscreen;
+	gip.stencil_bits = 8;
+	gip.dont_care_flags = DONT_CARE_DEPTH | DONT_CARE_STENCIL | DONT_CARE_BPP;
+
+	return create_graphics_context(gip);
+}
+
 /* OpenGL startup after initialization */
 bool start_gl() {
 	SysCaps sys_caps = get_system_capabilities();

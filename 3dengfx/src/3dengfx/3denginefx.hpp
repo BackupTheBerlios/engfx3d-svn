@@ -47,6 +47,7 @@ namespace engfx_state {
 }
 
 bool create_graphics_context(const GraphicsInitParameters &gip);
+bool create_graphics_context(int x, int y, bool fullscreen);
 bool start_gl();
 void destroy_graphics_context();
 void set_default_states();
