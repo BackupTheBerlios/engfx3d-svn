@@ -1,7 +1,7 @@
 /*
-Copyright 2004 John Tsiombikas <nuclear@siggraph.org>
-
 This is a small image library.
+
+Copyright (C) 2004, 2005 John Tsiombikas <nuclear@siggraph.org>
 
 This library is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,6 +31,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <stdlib.h>
 #include <string.h>
+#include "color_bits.h"
+#include "common/byteorder.h"
 
 struct tga_header {
 	unsigned char idlen;		/* id field length */
@@ -83,13 +85,13 @@ void *load_tga(FILE *fp, unsigned long *xsz, unsigned long *ysz) {
 	hdr.idlen = fgetc(fp);
 	hdr.cmap_type = fgetc(fp);
 	hdr.img_type = fgetc(fp);
-	fread(&hdr.cmap_first, 2, 1, fp);
-	fread(&hdr.cmap_len, 2, 1, fp);
+	hdr.cmap_first = read_int16_le(fp);
+	hdr.cmap_len = read_int16_le(fp);
 	hdr.cmap_entry_sz = fgetc(fp);
-	fread(&hdr.img_x, 2, 1, fp);
-	fread(&hdr.img_y, 2, 1, fp);
-	fread(&hdr.img_width, 2, 1, fp);
-	fread(&hdr.img_height, 2, 1, fp);
+	hdr.img_x = read_int16_le(fp);
+	hdr.img_y = read_int16_le(fp);
+	hdr.img_width = read_int16_le(fp);
+	hdr.img_height = read_int16_le(fp);
 	hdr.img_bpp = fgetc(fp);
 	hdr.img_desc = fgetc(fp);
 
@@ -133,7 +135,7 @@ void *load_tga(FILE *fp, unsigned long *xsz, unsigned long *ysz) {
 			b = fgetc(fp);
 			a = (hdr.img_desc & 0xf) ? fgetc(fp) : 255;
 		
-			*ptr++ = r | (g << 8) | (b << 16) | (a << 24);		
+			*ptr++ = PACK_COLOR32(a, r, g, b);
 			
 			if(feof(fp)) break;
 		}
@@ -177,35 +179,36 @@ int save_tga(FILE *fp, void *pixels, unsigned long xsz, unsigned long ysz) {
 	strcpy(ftr.sig, "TRUEVISION-XFILE.");
 
 	/* write the header */
+	
 	fwrite(&hdr.idlen, 1, 1, fp);
 	fwrite(&hdr.cmap_type, 1, 1, fp);
 	fwrite(&hdr.img_type, 1, 1, fp);
-	fwrite(&hdr.cmap_first, 2, 1, fp);
-	fwrite(&hdr.cmap_len, 2, 1, fp);
+	write_int16_le(fp, hdr.cmap_first);
+	write_int16_le(fp, hdr.cmap_len);
 	fwrite(&hdr.cmap_entry_sz, 1, 1, fp);
-	fwrite(&hdr.img_x, 2, 1, fp);
-	fwrite(&hdr.img_y, 2, 1, fp);
-	fwrite(&hdr.img_width, 2, 1, fp);
-	fwrite(&hdr.img_height, 2, 1, fp);
+	write_int16_le(fp, hdr.img_x);
+	write_int16_le(fp, hdr.img_y);
+	write_int16_le(fp, hdr.img_width);
+	write_int16_le(fp, hdr.img_height);
 	fwrite(&hdr.img_bpp, 1, 1, fp);
 	fwrite(&hdr.img_desc, 1, 1, fp);
 
 	/* write the pixels */
 	for(i=0; i<pix_count; i++) {
-		fputc(*pptr & 0xff, fp);
-		fputc((*pptr >> 8) & 0xff, fp);
-		fputc((*pptr >> 16) & 0xff, fp);
+		fputc((*pptr >> BLUE_SHIFT32) & 0xff, fp);
+		fputc((*pptr >> GREEN_SHIFT32) & 0xff, fp);
+		fputc((*pptr >> RED_SHIFT32) & 0xff, fp);
 		
 		if(save_flags & IMG_SAVE_ALPHA) {
-			fputc((*pptr >> 24) & 0xff, fp);
+			fputc((*pptr >> ALPHA_SHIFT32) & 0xff, fp);
 		}
 		
 		pptr++;
 	}
 
 	/* write the footer */
-	fwrite(&ftr.ext_off, 4, 1, fp);
-	fwrite(&ftr.devdir_off, 4, 1, fp);
+	write_int32_le(fp, ftr.ext_off);
+	write_int32_le(fp, ftr.devdir_off);
 	fputs(ftr.sig, fp);
 	fputc(0, fp);
 

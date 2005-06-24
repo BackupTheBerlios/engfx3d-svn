@@ -101,7 +101,7 @@ PointLight::PointLight(const Vector3 &pos, const Color &col) {
 
 PointLight::~PointLight() {}
 
-void PointLight::set_gllight(int n, unsigned long time) const {
+void PointLight::set_gl_light(int n, unsigned long time) const {
 	int light_num = GL_LIGHT0 + n;
 	
 	Vector4 pos;

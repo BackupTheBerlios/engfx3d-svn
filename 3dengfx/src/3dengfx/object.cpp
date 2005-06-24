@@ -470,7 +470,7 @@ void Object::update_bounding_volume() {
 }
 
 
-// -------------------------------------
+// Convenience classes to deal with generated geometry
 
 ObjPlane::ObjPlane(const Vector3 &normal, const Vector2 &size, int subdiv) {
 	create_plane(get_mesh_ptr(), normal, size, subdiv);

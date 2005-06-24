@@ -262,7 +262,7 @@ void Scene::setup_lights(unsigned long msec) const {
 	int light_index = 0;
 	for(int i=0; i<8; i++) {
 		if(lights[i]) {
-			lights[i]->set_gllight(light_index++, msec);
+			lights[i]->set_gl_light(light_index++, msec);
 		}
 	}
 	glDisable(GL_LIGHT0 + light_index);

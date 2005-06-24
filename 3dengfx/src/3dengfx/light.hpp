@@ -51,7 +51,7 @@ public:
 	virtual scalar_t get_attenuation(int which) const;
 	virtual Vector3 get_attenuation_vector() const;
 	
-	virtual void set_gllight(int n, unsigned long time = XFORM_LOCAL_PRS) const = 0;
+	virtual void set_gl_light(int n, unsigned long time = XFORM_LOCAL_PRS) const = 0;
 };
 
 
@@ -60,7 +60,7 @@ public:
 	PointLight(const Vector3 &pos=Vector3(0,0,0), const Color &col=Color(1.0f, 1.0f, 1.0f));
 	virtual ~PointLight();
 
-	void set_gllight(int n, unsigned long time = XFORM_LOCAL_PRS) const;
+	void set_gl_light(int n, unsigned long time = XFORM_LOCAL_PRS) const;
 };
 	
 
