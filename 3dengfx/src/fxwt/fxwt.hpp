@@ -26,6 +26,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _FXWT_HPP_
 #define _FXWT_HPP_
 
+#include <list>
+
 #include "widget.hpp"
 #include "label.hpp"
 #include "button.hpp"
@@ -44,6 +46,15 @@ namespace fxwt {
 		BN_WHEELUP		= 4,
 		BN_WHEELDOWN	= 5
 	};
+
+	extern std::list<void (*)()> disp_handlers;
+	extern std::list<void (*)()> idle_handlers;
+	extern std::list<void (*)(int)> keyb_handlers;
+	extern std::list<void (*)(int, int)> motion_handlers;
+	extern std::list<void (*)(int, int, int, int)> button_handlers;
+	
+	extern bool button_state[6];
+	extern int screenx, screeny;
 
 	void init();
 

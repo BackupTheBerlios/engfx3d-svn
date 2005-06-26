@@ -8,10 +8,20 @@
 #if GFX_LIBRARY == SDL
 #define GFX_CFLAGS	"sdl-config --cflags"
 #define GFX_LIBS	"sdl-config --libs"
+
 #elif GFX_LIBRARY == GTK
 #define GFX_CFLAGS	"pkg-config --cflags gtk+-2.0 gtkglext-1.0"
 #define GFX_LIBS	"pkg-config --libs gtk+-2.0 gtkglext-1.0"
-#endif	/* GFX_LIBRARY */
+
+#elif GFX_LIBRARY == NATIVE
+#if NATIVE_LIB == NATIVE_X11
+#define GFX_CFLAGS	"echo '-I/usr/X11R6/include -I/usr/include/X11'"
+#define GFX_LIBS	"echo '-L/usr/X11R6/lib -lX11 -lXext'"
+#elif NATIVE_LIB == NATIVE_WIN32
+/* ? */
+#endif
+
+#endif	/* GFX_LIBRARY == ? */
 
 #ifndef IMGLIB_NO_PNG
 #define LD_PNG	"-lpng"
@@ -96,7 +106,7 @@ void print_libs_no_3dengfx(void) {
 	FILE *p;
 	int c;
 		
-	printf("-lGL -l3ds -lbz2 %s %s ", LD_JPEG, LD_PNG);
+	printf("-lGL -l3ds %s %s ", LD_JPEG, LD_PNG);
 
 	if((p = popen(GFX_LIBS, "r"))) {
 		while((c = fgetc(p)) != -1) {

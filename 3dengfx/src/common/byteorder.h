@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _BYTEORDER_H_
 #define _BYTEORDER_H_
 
+#include <stdio.h>
 #include <stdint.h>
 
 /*The byte order determination procedure is derived from SDL's SDL_byteorder.h
