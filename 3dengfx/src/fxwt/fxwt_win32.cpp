@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "3dengfx_config.h"
 
-#if GFX_LIBRARY == NATIVE && NATIVE_LIB == NATIVE_X11
+#if GFX_LIBRARY == NATIVE && NATIVE_LIB == NATIVE_WIN32
 
 #include "gfx_library.h"
 #include "fxwt.hpp"
@@ -172,3 +172,5 @@ static void button_event(int bn, bool state, int x, int y) {
 static int vkey_to_keysym(unsigned int vkey) {
 	return 0xff << 8 | (vkey & 0xff);
 }
+
+#endif	// GFX_LIBRARY == NATIVE && NATIVE_LIB == NATIVE_WIN32
