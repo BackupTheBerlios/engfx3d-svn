@@ -29,6 +29,8 @@
 
 /* define this to use single precision floating point scalars
  * throughout the 3dengine code.
+ * WARING: the *double* precision mode doesn't get too much testing,
+ * it should work, but it might not, so better keep it defined.
  */
 #define SINGLE_PRECISION_MATH
 

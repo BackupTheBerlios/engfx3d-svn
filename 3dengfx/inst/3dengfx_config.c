@@ -21,6 +21,10 @@
 /* ? */
 #endif
 
+#elif GFX_LIBRARY == GLUT
+#define GFX_CFLAGS	"echo ''"
+#define GFX_LIBS	"echo '-lglut'"
+
 #endif	/* GFX_LIBRARY == ? */
 
 #ifndef IMGLIB_NO_PNG

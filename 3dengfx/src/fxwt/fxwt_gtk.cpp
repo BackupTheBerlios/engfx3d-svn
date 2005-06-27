@@ -23,6 +23,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Author: John Tsiombikas 2004
  */
 
+#include "3dengfx_config.h"
+
 #if GFX_LIBRARY == GTK
 
 #include "gfx_library.h"

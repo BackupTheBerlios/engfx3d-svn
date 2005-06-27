@@ -1,7 +1,7 @@
 /*
 This file is part of fxwt, the window system toolkit of 3dengfx.
 
-Copyright (c) 2004, 2005 John Tsiombikas <nuclear@siggraph.org>
+Copyright (C) 2004, 2005 John Tsiombikas <nuclear@siggraph.org>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-/* main fxwt event handling and system abstraction.
+/* main fxwt event handling and window system abstraction through SDL.
  *
  * Author: John Tsiombikas 2004
  */
