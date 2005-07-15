@@ -87,6 +87,9 @@ public:
 	Vector3(scalar_t x = 0.0, scalar_t y = 0.0, scalar_t z = 0.0);
 	Vector3(const Vector2 &vec);
 	Vector3(const Vector4 &vec);
+	Vector3(const SphVector &sph);
+
+	Vector3 &operator =(const SphVector &sph);
 	
 	inline scalar_t &operator [](int elem);	
 	

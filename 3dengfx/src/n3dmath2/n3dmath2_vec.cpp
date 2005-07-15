@@ -96,6 +96,17 @@ Vector3::Vector3(const Vector4 &vec) {
 	z = vec.z;
 }
 
+Vector3::Vector3(const SphVector &sph) {
+	*this = sph;
+}
+
+Vector3 &Vector3::operator =(const SphVector &sph) {
+	x = sph.r * cos(sph.theta) * sin(sph.phi);
+	z = sph.r * sin(sph.theta) * sin(sph.phi);
+	y = sph.r * cos(sph.phi);
+	return *this;
+}
+
 void Vector3::normalize() {
 	scalar_t len = length();
 	x /= len;

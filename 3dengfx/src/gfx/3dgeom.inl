@@ -235,5 +235,6 @@ inline const TriangleArray *TriMesh::get_triangle_array() const {
 
 inline TriangleArray *TriMesh::get_mod_triangle_array() {
 	indices_valid = false;
+	edges_valid = false;
 	return &tarray;
 }

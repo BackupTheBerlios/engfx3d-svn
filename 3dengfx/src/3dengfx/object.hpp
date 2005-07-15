@@ -139,4 +139,9 @@ public:
 	ObjTorus(scalar_t circle_rad = 0.5, scalar_t revolv_rad = 1.0, int subdiv = 5);
 };
 
+class ObjTeapot : public Object {
+public:
+	ObjTeapot(scalar_t size = 1.0, int subdiv = 5);
+};
+
 #endif	// _OBJECT_HPP_

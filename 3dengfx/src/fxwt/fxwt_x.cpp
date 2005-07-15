@@ -32,6 +32,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "3dengfx/3denginefx.hpp"
 #include "common/err_msg.h"
 
+#ifdef __unix__
+#include <unistd.h>
+#ifdef _POSIX_PRIORITY_SCHEDULING
+#include <sched.h>
+#endif	// _POSIX_PRIORITY_SCHEDULING
+#endif	// __unix__
+
 using std::list;
 using namespace fxwt;
 
@@ -53,6 +60,9 @@ void fxwt::set_window_title(const char *title) {
 
 void fxwt::swap_buffers() {
 	glXSwapBuffers(fxwt_x_dpy, fxwt_x_win);
+#ifdef _POSIX_PRIORITY_SCHEDULING
+	sched_yield();
+#endif
 }
 
 int fxwt::main_loop() {

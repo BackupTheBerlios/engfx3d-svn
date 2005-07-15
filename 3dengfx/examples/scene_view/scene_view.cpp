@@ -116,7 +116,7 @@ bool init() {
 	timer_reset(&timer);
 	timer_start(&timer);
 
-	fps_start(&fps, 0, 1000);
+	//fps_start(&fps, 0, 1000);
 	return true;
 }
 
@@ -129,11 +129,13 @@ void update_gfx() {
 
 	flip();
 
+	/*
 	if(fps_frame_proc(&fps, timer_getmsec(&timer))) {
 		stringstream buf;
 		buf << title_str << " [frame-polygons: " << scene->get_frame_poly_count() << " fps: " << fps_get_frame_rate(&fps) << "]";
 		fxwt::set_window_title(buf.str().c_str());
 	}
+	*/
 }
 
 void clean_up() {

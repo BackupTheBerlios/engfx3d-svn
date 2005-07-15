@@ -79,6 +79,7 @@ Vector3 bezier_tangent(const Vector3 &p0, const Vector3 &p1, const Vector3 &p2, 
 #include "n3dmath2_vec.hpp"
 #include "n3dmath2_mat.hpp"
 #include "n3dmath2_qua.hpp"
+#include "n3dmath2_sph.hpp"
 #include "n3dmath2_ray.hpp"
 #include "n3dmath2_qdr.hpp"
 

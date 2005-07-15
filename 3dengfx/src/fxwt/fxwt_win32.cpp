@@ -52,6 +52,7 @@ void fxwt::set_window_title(const char *title) {
 
 void fxwt::swap_buffers() {
 	SwapBuffers(fxwt_win32_hdc);
+	Sleep(0);
 }
 
 int fxwt::main_loop() {

@@ -66,7 +66,7 @@ Edge::Edge() {
 	vertices[0] = vertices[1] = adjfaces[0] = adjfaces[1] = 0;
 }
 
-Edge::Edge(Index v1, Index v2, Index af1, Index af2) {
+Edge::Edge(unsigned long v1, unsigned long v2, unsigned long af1, unsigned long af2) {
 	vertices[0] = v1;
 	vertices[1] = v2;
 	adjfaces[0] = af1;
@@ -233,26 +233,73 @@ void GeometryArray<Index>::set_data(const Index *data, unsigned long count) {
 TriMesh::TriMesh() {
 	indices_valid = false;
 	vertex_stats_valid = false;
+	edges_valid = false;
 }
 
 TriMesh::TriMesh(const Vertex *vdata, unsigned long vcount, const Triangle *tdata, unsigned long tcount) {
 	indices_valid = false;
 	vertex_stats_valid = false;
+	edges_valid = false;
 	set_data(vdata, vcount, tdata, tcount);
+}
+
+// TODO: see if we can optimize this to linear complexity, i.e. get rid of the inner loop.
+void TriMesh::calculate_edges() {
+	std::cerr << "calc_edges()\n";
+	vector<Edge> edges;
+
+	Triangle *tptr = tarray.get_mod_data();
+	for(unsigned int i=0; i<tarray.get_count(); i++) {
+		for(unsigned int j=0; j<3; j++) {	// for every edge of the triangle...
+			unsigned long vindex1 = tptr->vertices[j];
+			unsigned long vindex2 = tptr->vertices[(j + 1) % 3];
+			bool new_edge = true;
+			
+			// search the list of edges for an edge with the same two vertices
+			/*for(unsigned int k=0; k<edges.size(); k++) {
+				if((edges[k].vertices[0] == vindex1 || edges[k].vertices[0] == vindex2)
+						&& (edges[k].vertices[1] == vindex1 || edges[k].vertices[1] == vindex2)) {
+					
+					assert(edges[k].adjfaces[0] != 0xffffffff);
+					assert(edges[k].adjfaces[1] == 0xffffffff);
+					edges[k].adjfaces[1] = i;
+					
+					new_edge = false;
+					break;
+				}
+			}*/
+
+			// if we did not find this edge in the list, add a new one.
+			if(new_edge) {
+				edges.push_back(Edge(vindex1, vindex2, i, 0xffffffff));
+			}
+		}
+		
+		tptr++;
+	}
+
+	earray.set_data(&edges[0], edges.size());
+	edges_valid = true;
 }
 
 const IndexArray *TriMesh::get_index_array() {
 	if(!indices_valid) {
-		//iarray = IndexArray(tarray);
 		tri_to_index_array(&iarray, tarray);
 		indices_valid = true;
 	}
 	return &iarray;
 }
 
+const GeometryArray<Edge> *TriMesh::get_edge_array() const {
+	if(!edges_valid) {
+		const_cast<TriMesh*>(this)->calculate_edges();
+	}
+	return &earray;
+}
+
 void TriMesh::set_data(const Vertex *vdata, unsigned long vcount, const Triangle *tdata, unsigned long tcount) {
 	get_mod_vertex_array()->set_data(vdata, vcount);	// also invalidates vertex stats
-	get_mod_triangle_array()->set_data(tdata, tcount);	// also invalidates indices
+	get_mod_triangle_array()->set_data(tdata, tcount);	// also invalidates indices and edges
 }
 
 void TriMesh::calculate_normals() {
@@ -266,15 +313,10 @@ void TriMesh::calculate_normals() {
 		}
 	}
 	
-	bool prev_ivalid_state = indices_valid;
-	
 	// calculate the triangle normals
 	for(unsigned int i=0; i<tarray.get_count(); i++) {
 		tarray.get_mod_data()[i].calculate_normal(varray.get_data(), false);
 	}
-	
-	// we only changed the normal above, so the indices are really still valid
-	indices_valid = prev_ivalid_state;
 	
 	// now calculate the vertex normals
 	for(unsigned int i=0; i<varray.get_count(); i++) {

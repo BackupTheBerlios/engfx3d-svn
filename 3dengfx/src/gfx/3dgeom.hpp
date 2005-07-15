@@ -60,11 +60,11 @@ public:
 
 class Edge {
 public:
-	Index vertices[2];
-	Index adjfaces[2];
+	unsigned long vertices[2];
+	unsigned long adjfaces[2];
 
 	Edge();
-	Edge(Index v1, Index v2, Index af1 = 0, Index af2 = 0);
+	Edge(unsigned long v1, unsigned long v2, unsigned long af1 = 0, unsigned long af2 = 0);
 };
 
 
@@ -91,12 +91,6 @@ public:
 	void calculate_normal(const Vertex *vbuffer, bool normalize=0);
 };
 
-
-/* And for my next trick... these template classes with specialization for
- * the index case. They handle the conversion from triangle arrays to index
- * arrays in an excruciatingly smooth and automagic way.
- * I like this one, didn't have that in my previous engine, new idea.
- */
 
 //////////////// Geometry Arrays //////////////
 template <class DataType>
@@ -184,10 +178,15 @@ private:
 	TriangleArray tarray;
 	IndexArray iarray;
 
+	GeometryArray<Edge> earray;
+
 	mutable VertexStatistics vstats;
 	
 	mutable bool vertex_stats_valid;
 	bool indices_valid;
+	bool edges_valid;
+
+	void calculate_edges();
 	
 public:
 	TriMesh();
@@ -200,9 +199,10 @@ public:
 	inline TriangleArray *get_mod_triangle_array();
 	
 	const IndexArray *get_index_array();
+	const GeometryArray<Edge> *get_edge_array() const;
 	
 	void set_data(const Vertex *vdata, unsigned long vcount, const Triangle *tdata, unsigned long tcount);	
-		
+
 	void calculate_normals();
 	void normalize_normals();
 	void invert_winding();

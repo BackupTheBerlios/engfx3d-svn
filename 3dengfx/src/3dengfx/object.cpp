@@ -487,3 +487,7 @@ ObjSphere::ObjSphere(scalar_t radius, int subdiv) {
 ObjTorus::ObjTorus(scalar_t circle_rad, scalar_t revolv_rad, int subdiv) {
 	create_torus(get_mesh_ptr(), circle_rad, revolv_rad, subdiv);
 }
+
+ObjTeapot::ObjTeapot(scalar_t size, int subdiv) {
+	create_teapot(get_mesh_ptr(), size, subdiv);
+}

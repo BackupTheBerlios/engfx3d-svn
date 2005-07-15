@@ -39,6 +39,9 @@ static const scalar_t timeslice = 1.0 / 30.0;
 #define PVERT_BUF_SIZE		2048
 static ParticleVertex pvert_buf[PVERT_BUF_SIZE];
 
+// just a trial and error constant to match point-sprite size with billboard size
+#define PSPRITE_BILLBOARD_RATIO		150
+
 Fuzzy::Fuzzy(scalar_t num, scalar_t range) {
 	this->num = num;
 	this->range = range;
@@ -126,11 +129,15 @@ ParticleSysParams::ParticleSysParams() {
 	friction = 0.95;
 	billboard_tex = 0;
 	halo = 0;
+	big_particles = false;
 }
 
 
 
 ParticleSystem::ParticleSystem(const char *fname) {
+	SysCaps sys_caps = get_system_capabilities();
+	psprites_unsupported = !sys_caps.point_sprites || !sys_caps.point_params;
+
 	prev_update = 0.0;
 	fraction = 0.0;
 	ptype = PTYPE_BILLBOARD;
@@ -154,11 +161,13 @@ void ParticleSystem::set_particle_type(ParticleType ptype) {
 }
 
 void ParticleSystem::update(const Vector3 &ext_force) {
+	curr_time = global_time;
 	int updates_missed = (int)round((global_time - prev_update) / timeslice);
 
 	if(!updates_missed) return;	// less than a timeslice has elapsed, nothing to do
 	
 	PRS prs = get_prs((unsigned long)(global_time * 1000.0));
+	curr_pos = prs.position;
 
 	// spawn new particles
 	scalar_t spawn = psys_params.birth_rate() * (global_time - prev_update);
@@ -231,43 +240,56 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 	prev_update = global_time;
 }
 
-
-static void render_particle_buffer(int count, const Texture *tex) {
+static void render_particle_buffer(int count, const Texture *tex, bool use_psprites) {
+	
 	set_lighting(false);
 	set_zwrite(false);
 	set_alpha_blending(true);
 	set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE);
 
 	if(tex) {
-		set_point_sprites(true);
 		enable_texture_unit(0);
 		disable_texture_unit(1);
 		set_texture(0, tex);
-		set_point_sprite_coords(0, true);
+		
+		if(use_psprites) {
+			set_point_sprites(true);
+			set_point_sprite_coords(0, true);
+		}
 	}
 
 	set_texture_unit_color(0, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
 	set_texture_unit_alpha(0, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
 		
-	glPointSize(pvert_buf[0].size);
+	if(use_psprites) {
+		glPointSize(pvert_buf[0].size);
 	
-	/* I would prefer using vertex arrays, but I can't seem to be able
-	 * to make points sprites work with it. So let's leave it for the
-	 * time being
-	 */
-	glBegin(GL_POINTS);
-	for(int i=0; i<count; i++) {
-		glColor4f(pvert_buf[i].col.r, pvert_buf[i].col.g, pvert_buf[i].col.b, pvert_buf[i].col.a);
-		glVertex3f(pvert_buf[i].pos.x, pvert_buf[i].pos.y, pvert_buf[i].pos.z);
-	}
-	glEnd();
+		/* I would prefer using vertex arrays, but I can't seem to be able
+		 * to make points sprites work with it. So let's leave it for the
+		 * time being
+		 */
+		glBegin(GL_POINTS);
+		for(int i=0; i<count; i++) {
+			glColor4f(pvert_buf[i].col.r, pvert_buf[i].col.g, pvert_buf[i].col.b, pvert_buf[i].col.a);
+			glVertex3f(pvert_buf[i].pos.x, pvert_buf[i].pos.y, pvert_buf[i].pos.z);
+		}
+		glEnd();
 
-	glPointSize(1.0);
+		glPointSize(1.0);
+		
+	} else {	// don't use point sprites
+		for(int i=0; i<count; i++) {
+			Vertex v(pvert_buf[i].pos, 0, 0, pvert_buf[i].col);
+			draw_point(v, pvert_buf[0].size / PSPRITE_BILLBOARD_RATIO);
+		}
+	}
 
 	if(tex) {
-		set_point_sprite_coords(0, true);
+		if(use_psprites) {
+			set_point_sprites(true);
+			set_point_sprite_coords(0, true);
+		}
 		disable_texture_unit(0);
-		set_point_sprites(true);
 	}
 
 	set_alpha_blending(false);
@@ -276,6 +298,8 @@ static void render_particle_buffer(int count, const Texture *tex) {
 }
 
 void ParticleSystem::draw() const {
+	bool use_psprites = !psys_params.big_particles && !psprites_unsupported;
+	
 	set_matrix(XFORM_WORLD, Matrix4x4());
 	load_xform_matrices();
 
@@ -294,7 +318,7 @@ void ParticleSystem::draw() const {
 
 			if(i >= PVERT_BUF_SIZE || iter == particles.end()) {
 				// render i particles
-				render_particle_buffer(i, psys_params.billboard_tex);
+				render_particle_buffer(i, psys_params.billboard_tex, use_psprites);
 
 				i = 0;
 				pv_ptr = pvert_buf;
@@ -312,8 +336,8 @@ void ParticleSystem::draw() const {
 		disable_texture_unit(1);
 		set_texture(0, psys_params.halo);
 		set_zwrite(false);
-		Vertex v(get_position((unsigned long)(global_time * 1000.0)), 0, 0, psys_params.halo_color);
-		draw_point(v, psys_params.halo_size());
+		Vertex v(curr_pos, 0, 0, psys_params.halo_color);
+		draw_point(v, psys_params.halo_size() / PSPRITE_BILLBOARD_RATIO);
 		set_zwrite(true);
 		disable_texture_unit(0);
 		set_alpha_blending(false);

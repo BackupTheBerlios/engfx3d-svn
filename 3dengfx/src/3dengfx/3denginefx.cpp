@@ -315,6 +315,10 @@ SysCaps get_system_capabilities() {
 	info("Point parameters: %s", sys_caps.point_params ? "yes" : "no");
 	info("Texture units: %d", sys_caps.max_texture_units);
 
+	if(!sys_caps.point_sprites || !sys_caps.point_params) {
+		warning("no point sprites support, falling back to billboards which *may* degrade particle system performance");
+	}
+
 	return sys_caps;
 }
 
@@ -477,6 +481,15 @@ bool start_gl() {
 	if(sys_caps.point_params) {
 		glPointParameterf = (PFNGLPOINTPARAMETERFARBPROC)glGetProcAddress("glPointParameterfARB");
 		glPointParameterfv = (PFNGLPOINTPARAMETERFVARBPROC)glGetProcAddress("glPointParameterfvARB");
+
+		if(!glPointParameterfv) {
+			error("error loading glPointParameterfv");
+			return false;
+		}
+		if(!glPointParameterf) {
+			error("error loading glPointParameterf");
+			return false;
+		}
 	}
 
 	gc_valid = true;

@@ -126,6 +126,8 @@ struct ParticleSysParams {
 	Color halo_color;		// halo color
 	Fuzzy halo_size;		// halo size
 
+	bool big_particles;		// need support for big particles (i.e. don't use point sprites)
+
 	ParticleSysParams();
 };
 
@@ -139,6 +141,7 @@ enum ParticleType {PTYPE_PSYS, PTYPE_BILLBOARD, PTYPE_MESH};
  */
 class ParticleSystem : public Particle {
 protected:
+	bool psprites_unsupported;
 	std::list<Particle*> particles;
 
 	ParticleSysParams psys_params;
@@ -146,6 +149,9 @@ protected:
 
 	scalar_t fraction;
 	scalar_t prev_update;
+
+	scalar_t curr_time;
+	Vector3 curr_pos;
 
 public:
 	ParticleSystem(const char *fname = 0);
