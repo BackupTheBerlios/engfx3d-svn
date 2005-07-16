@@ -1,7 +1,110 @@
 #!/bin/sh
 
-echo 'Creating 3dengfx-config program'
-gcc -o 3dengfx-config inst/3dengfx_config.c -Isrc
+echo 'configuring 3dengfx ...'
 
-echo 'Creating installer program'
-gcc -o inst/inst inst/inst.c -Isrc
+prefix=/usr/local
+gfx=native
+png=yes
+jpeg=yes
+
+for arg
+do
+	case "$arg" in 
+	# set installation directory
+	--prefix=*)
+		value=`echo $arg | sed 's/--prefix=//'`
+		prefix=${value:-$prefix}
+		;;
+
+	# set gfx library
+	--with-gfxlib=*)
+		value=`echo $arg | sed 's/--with-gfxlib=//'`
+		case "$value" in
+		sdl|glut|native|gtk)
+			gfx=$value;;
+		esac
+		;;
+	
+	#enable/disable png support
+	--enable-png)
+		png=yes;;
+	--disable-png)
+		png=no;;
+	
+	#enable/disable jpeg support
+	--enable-jpeg)
+		jpeg=yes;;
+	--disable-jpeg)
+		jpeg=no;;
+
+	--help)
+		echo 'usage: ./configure [options]'
+		echo 'options:'
+		echo '  --prefix=<path>: installation path (default: /usr/local)'
+		echo '  --with-gfxlib=<sdl|glut|native|gtk> (default: native)'
+		echo '  --enable-png: enable png support, requires libpng (default)'
+		echo '  --disable-png: disable png support'
+		echo '  --enable-jpeg: enable jpeg support, requres libjpeg (defaul)'
+		echo '  --disable-jpeg: disable jpeg support'
+		echo '  --help: this help screen'
+		echo 'all invalid options are silently ignored.'
+		exit 0
+		;;
+	esac
+done
+
+echo "prefix: $prefix"
+echo "gfxlib: $gfx"
+echo "png support: $png"
+echo "jpeg support: $jpeg"
+
+# output config header
+echo 'creating 3dengfx_config.h ...'
+cfg_file=src/3dengfx_config.h
+
+echo '/* this header is created by the 3dengfx configuration script */' >$cfg_file
+echo '#ifndef _3DENGFX_CONFIG_H_' >>$cfg_file
+echo '#define _3DENGFX_CONFIG_H_' >>$cfg_file
+
+echo '#define USING_3DENGFX' >>$cfg_file
+echo '#define VER_STR	"0.5"' >>$cfg_file
+echo "#define PREFIX	\"$prefix\"" >>$cfg_file
+
+echo '#define SDL					1' >>$cfg_file
+echo '#define GLUT				2' >>$cfg_file
+echo '#define GTK					3' >>$cfg_file
+echo '#define GTKMM				4' >>$cfg_file
+echo '#define NATIVE				5' >>$cfg_file
+echo '#define NATIVE_X11			10' >>$cfg_file
+echo '#define NATIVE_WIN32		11' >>$cfg_file
+
+gfx_def=`echo $gfx | tr '[:lower:]' '[:upper:]'`
+echo "#define GFX_LIBRARY $gfx_def" >>$cfg_file
+
+echo '#define SINGLE_PRECISION_MATH' >>$cfg_file
+
+if [ "$png" == "no" ]; then
+	echo '#define IMGLIB_NO_PNG' >>$cfg_file
+fi
+
+if [ "$jpeg" == "no" ]; then
+	echo '#define IMGLIB_NO_JPEG' >> $cfg_file
+fi
+
+echo '#if GFX_LIBRARY == NATIVE' >>$cfg_file
+echo '#if defined(__unix__)' >>$cfg_file
+echo '#define NATIVE_LIB		NATIVE_X11' >>$cfg_file
+echo '#elif defined(WIN32)' >>$cfg_file
+echo '#define NATIVE_LIB		NATIVE_WIN32' >>$cfg_file
+echo '#endif	/* unix/win32 */' >>$cfg_file
+echo '#endif	/* GFX_LIBRARY == NATIVE */' >>$cfg_file
+
+echo '#endif	/* _3DENGFX_CONFIG_H_ */' >>$cfg_file
+
+# create additional programs
+
+echo 'Creating 3dengfx-config program ...'
+cc -o 3dengfx-config inst/3dengfx_config.c -Isrc
+
+echo 'Creating installer program ...'
+cc -o inst/inst inst/inst.c -Isrc
