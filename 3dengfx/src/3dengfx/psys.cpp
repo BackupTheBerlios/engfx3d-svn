@@ -39,7 +39,9 @@ static const scalar_t timeslice = 1.0 / 30.0;
 // just a trial and error constant to match point-sprite size with billboard size
 #define PSPRITE_BILLBOARD_RATIO		150
 
+// particle rendering state
 static bool use_psprites = true;
+static bool volatile_particles = false;
 
 Fuzzy::Fuzzy(scalar_t num, scalar_t range) {
 	this->num = num;
@@ -102,22 +104,33 @@ void BillboardParticle::update(const Vector3 &ext_force) {
 	angle = rot * time + birth_angle;
 }
 
+/* NOTE:
+ * if we use point sprites, and the particles are not rotating, then the
+ * calling function has taken care to call glBegin() before calling this.
+ */
 void BillboardParticle::draw() const {
 	Matrix4x4 tex_rot;
-	tex_rot.translate(Vector3(0.5, 0.5, 0.0));
-	tex_rot.rotate(Vector3(0.0, 0.0, angle));
-	tex_rot.translate(Vector3(-0.5, -0.5, 0.0));
-	set_matrix(XFORM_TEXTURE, tex_rot);
+	if(volatile_particles) {
+		tex_rot.translate(Vector3(0.5, 0.5, 0.0));
+		tex_rot.rotate(Vector3(0.0, 0.0, angle));
+		tex_rot.translate(Vector3(-0.5, -0.5, 0.0));
+		set_matrix(XFORM_TEXTURE, tex_rot);
+	}
 
 	Vector3 pos = get_position();
 	
 	if(use_psprites) {
-		glPointSize(size);
-		
-		glBegin(GL_POINTS);
-		glColor4f(color.r, color.g, color.b, color.a);
-		glVertex3f(pos.x, pos.y, pos.z);
-		glEnd();
+		if(volatile_particles) {
+			glPointSize(size);
+			
+			glBegin(GL_POINTS);
+			glColor4f(color.r, color.g, color.b, color.a);
+			glVertex3f(pos.x, pos.y, pos.z);
+			glEnd();
+		} else {
+			glColor4f(color.r, color.g, color.b, color.a);
+			glVertex3f(pos.x, pos.y, pos.z);
+		}
 	} else {	// don't use point sprites
 		Vertex v(pos, 0, 0, color);
 		draw_point(v, size / PSPRITE_BILLBOARD_RATIO);
@@ -178,7 +191,7 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 	curr_pos = prs.position;
 	curr_halo_rot = psys_params.halo_rot * global_time;
 
-	scalar_t angle = fmod(psys_params.glob_rot * global_time, two_pi);
+	curr_rot = fmod(psys_params.glob_rot * global_time, two_pi);
 
 	// spawn new particles
 	scalar_t spawn = psys_params.birth_rate() * (global_time - prev_update);
@@ -207,7 +220,7 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 				bbp->start_color = psys_params.start_color;
 				bbp->end_color = psys_params.end_color;
 				bbp->rot = psys_params.rot;
-				bbp->birth_angle = angle;
+				bbp->birth_angle = curr_rot;
 			}
 
 			break;
@@ -256,64 +269,79 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 void ParticleSystem::draw() const {
 	if(!ready) return;
 
+	// use point sprites if the system supports them AND we don't need big particles
 	use_psprites = !psys_params.big_particles && !psprites_unsupported;
+
+	// particles are volatile if they rotate OR they fluctuate in size
+	volatile_particles = psys_params.rot > small_number || psys_params.psize.range > small_number;
 	
 	set_matrix(XFORM_WORLD, Matrix4x4());
 	load_xform_matrices();
 
 	std::list<Particle*>::const_iterator iter = particles.begin();
+	if(iter != particles.end()) {
 		
-	if(ptype == PTYPE_BILLBOARD) {
-		// ------ setup render state ------
-		set_lighting(false);
-		set_zwrite(false);
-		set_alpha_blending(true);
-		set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE);
+		if(ptype == PTYPE_BILLBOARD) {
+			// ------ setup render state ------
+			set_lighting(false);
+			set_zwrite(false);
+			set_alpha_blending(true);
+			set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE);
 
-		if(psys_params.billboard_tex) {
-			enable_texture_unit(0);
-			disable_texture_unit(1);
-			set_texture(0, psys_params.billboard_tex);
+			if(psys_params.billboard_tex) {
+				enable_texture_unit(0);
+				disable_texture_unit(1);
+				set_texture(0, psys_params.billboard_tex);
 
-			if(use_psprites) {
-				set_point_sprites(true);
-				set_point_sprite_coords(0, true);
+				if(use_psprites) {
+					set_point_sprites(true);
+					set_point_sprite_coords(0, true);
+				}
+
+				if(!volatile_particles) {
+					Matrix4x4 prot;
+					prot.translate(Vector3(0.5, 0.5, 0.0));
+					prot.rotate(Vector3(0.0, 0.0, curr_rot));
+					prot.translate(Vector3(-0.5, -0.5, 0.0));
+					set_matrix(XFORM_TEXTURE, prot);
+				}
+			}
+
+			set_texture_unit_color(0, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
+			set_texture_unit_alpha(0, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
+
+			if(use_psprites && !volatile_particles) {
+				glPointSize((*iter)->size);
+				glBegin(GL_POINTS);
 			}
 		}
 
-		set_texture_unit_color(0, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
-		set_texture_unit_alpha(0, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
-
-		/*if(use_psprites) {
-			glPointSize(pvert_buf[0].size);
-			glBegin(GL_POINTS);
-		}*/
-	}
-
-	// ------ render particles ------
-	while(iter != particles.end()) {
-		(*iter++)->draw();
-	}
+		// ------ render particles ------
+		while(iter != particles.end()) {
+			(*iter++)->draw();
+		}
 	
-	if(ptype == PTYPE_BILLBOARD) {
-		// ------ restore render states -------
-		if(use_psprites) {
-			glPointSize(1.0);
-		}
-
-		if(psys_params.billboard_tex) {
+		if(ptype == PTYPE_BILLBOARD) {
+			// ------ restore render states -------
 			if(use_psprites) {
-				set_point_sprites(true);
-				set_point_sprite_coords(0, true);
+				if(!volatile_particles) glEnd();
+				glPointSize(1.0);
 			}
-			disable_texture_unit(0);
 
-			set_matrix(XFORM_TEXTURE, Matrix4x4::identity_matrix);
+			if(psys_params.billboard_tex) {
+				if(use_psprites) {
+					set_point_sprites(true);
+					set_point_sprite_coords(0, true);
+				}
+				disable_texture_unit(0);
+
+				set_matrix(XFORM_TEXTURE, Matrix4x4::identity_matrix);
+			}
+
+			set_alpha_blending(false);
+			set_zwrite(true);
+			set_lighting(true);
 		}
-
-		set_alpha_blending(false);
-		set_zwrite(true);
-		set_lighting(true);
 	}
 
 	// ------ render a halo around the emitter if we need to ------

@@ -80,16 +80,13 @@ public:
 
 /* draws the particle as a textured quad */
 class BillboardParticle : public Particle {
-private:
-	Color color;
-	scalar_t angle;
-	
 public:
 	Texture *texture;
 	Color start_color, end_color;
 	scalar_t rot, birth_angle;
 	
-	//virtual ParticleVertex get_particle_vertex() const;
+	Color color;
+	scalar_t angle;
 	
 	virtual void update(const Vector3 &ext_force = Vector3());
 	virtual void draw() const;
@@ -150,8 +147,7 @@ protected:
 	// current variables are calculated during each update()
 	scalar_t curr_time;
 	Vector3 curr_pos;
-
-	scalar_t curr_halo_rot;
+	scalar_t curr_rot, curr_halo_rot;
 
 public:
 	ParticleSystem(const char *fname = 0);
