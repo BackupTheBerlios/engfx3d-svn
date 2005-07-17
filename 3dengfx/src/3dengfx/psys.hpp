@@ -57,17 +57,6 @@ public:
 };
 
 
-/* this is used only by the rendering code
- * to draw billboard particles. I just placed
- * it here for convinience.
- */
-struct ParticleVertex {
-	Vector3 pos;
-	Color col;
-	scalar_t size;
-};
-
-
 /* particle abstract base class.
  * Derived from XFormNode for controller functionality
  */
@@ -91,12 +80,16 @@ public:
 
 /* draws the particle as a textured quad */
 class BillboardParticle : public Particle {
+private:
+	Color color;
+	scalar_t angle;
+	
 public:
 	Texture *texture;
 	Color start_color, end_color;
-	Color color;
+	scalar_t rot, birth_angle;
 	
-	virtual ParticleVertex get_particle_vertex() const;
+	//virtual ParticleVertex get_particle_vertex() const;
 	
 	virtual void update(const Vector3 &ext_force = Vector3());
 	virtual void draw() const;
@@ -121,10 +114,13 @@ struct ParticleSysParams {
 	Texture *billboard_tex;	// texture used for billboards
 	Color start_color;		// start color
 	Color end_color;		// end color
+	scalar_t rot;			// particle rotation (radians / second counting from birth)
+	scalar_t glob_rot;		// particle emmiter rotation, particles inherit this
 	
 	Texture *halo;			// halo texture
 	Color halo_color;		// halo color
 	Fuzzy halo_size;		// halo size
+	scalar_t halo_rot;		// halo rotation (radians / second)
 
 	bool big_particles;		// need support for big particles (i.e. don't use point sprites)
 
@@ -141,6 +137,7 @@ enum ParticleType {PTYPE_PSYS, PTYPE_BILLBOARD, PTYPE_MESH};
  */
 class ParticleSystem : public Particle {
 protected:
+	bool ready;
 	bool psprites_unsupported;
 	std::list<Particle*> particles;
 
@@ -150,8 +147,11 @@ protected:
 	scalar_t fraction;
 	scalar_t prev_update;
 
+	// current variables are calculated during each update()
 	scalar_t curr_time;
 	Vector3 curr_pos;
+
+	scalar_t curr_halo_rot;
 
 public:
 	ParticleSystem(const char *fname = 0);

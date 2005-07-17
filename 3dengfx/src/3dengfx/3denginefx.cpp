@@ -741,8 +741,8 @@ void draw_point(const Vertex &pt, scalar_t size) {
 	Basis basis;
 	basis.k = -(cam_pos - p).normalized();
 	basis.j = Vector3(0, 1, 0);
-	basis.i = cross_product(basis.j, basis.k).normalized();
-	basis.j = cross_product(basis.k, basis.i).normalized();
+	basis.i = cross_product(basis.j, basis.k);
+	basis.j = cross_product(basis.k, basis.i);
 
 	world_matrix.set_translation(p);
 	world_matrix = world_matrix * Matrix4x4(basis.create_rotation_matrix());

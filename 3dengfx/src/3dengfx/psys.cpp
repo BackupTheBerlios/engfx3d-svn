@@ -36,11 +36,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 static scalar_t global_time;
 static const scalar_t timeslice = 1.0 / 30.0;
 
-#define PVERT_BUF_SIZE		2048
-static ParticleVertex pvert_buf[PVERT_BUF_SIZE];
-
 // just a trial and error constant to match point-sprite size with billboard size
 #define PSPRITE_BILLBOARD_RATIO		150
+
+static bool use_psprites = true;
 
 Fuzzy::Fuzzy(scalar_t num, scalar_t range) {
 	this->num = num;
@@ -91,16 +90,6 @@ void Particle::update(const Vector3 &ext_force) {
 	translate(velocity);	// update position
 }
 
-
-ParticleVertex BillboardParticle::get_particle_vertex() const {
-	ParticleVertex pv;
-	pv.pos = get_prs().position;
-	pv.size = size;
-	pv.col = Color(color.r, color.g, color.b, color.a);
-
-	return pv;
-}
-
 void BillboardParticle::update(const Vector3 &ext_force) {
 	Particle::update(ext_force);
 	
@@ -109,17 +98,29 @@ void BillboardParticle::update(const Vector3 &ext_force) {
 	scalar_t t = time / lifespan;
 	
 	color = blend_colors(start_color, end_color, t);
+
+	angle = rot * time + birth_angle;
 }
 
-
-
-
 void BillboardParticle::draw() const {
-	static int times;
+	Matrix4x4 tex_rot;
+	tex_rot.translate(Vector3(0.5, 0.5, 0.0));
+	tex_rot.rotate(Vector3(0.0, 0.0, angle));
+	tex_rot.translate(Vector3(-0.5, -0.5, 0.0));
+	set_matrix(XFORM_TEXTURE, tex_rot);
 
-	if(!times) {
-		warning("WARNING: BillboardParticle::draw() is just a stub, due efficiency reasons");
-		times++;
+	Vector3 pos = get_position();
+	
+	if(use_psprites) {
+		glPointSize(size);
+		
+		glBegin(GL_POINTS);
+		glColor4f(color.r, color.g, color.b, color.a);
+		glVertex3f(pos.x, pos.y, pos.z);
+		glEnd();
+	} else {	// don't use point sprites
+		Vertex v(pos, 0, 0, color);
+		draw_point(v, size / PSPRITE_BILLBOARD_RATIO);
 	}
 }
 
@@ -129,6 +130,8 @@ ParticleSysParams::ParticleSysParams() {
 	friction = 0.95;
 	billboard_tex = 0;
 	halo = 0;
+	rot = 0.0;
+	halo_rot = 0.0;
 	big_particles = false;
 }
 
@@ -142,9 +145,12 @@ ParticleSystem::ParticleSystem(const char *fname) {
 	fraction = 0.0;
 	ptype = PTYPE_BILLBOARD;
 
+	ready = true;
+
 	if(fname) {
 		if(!psys::load_particle_sys_params(fname, &psys_params)) {
 			error("Error loading particle file: %s", fname);
+			ready = false;
 		}
 	}
 }
@@ -161,6 +167,8 @@ void ParticleSystem::set_particle_type(ParticleType ptype) {
 }
 
 void ParticleSystem::update(const Vector3 &ext_force) {
+	if(!ready) return;
+	
 	curr_time = global_time;
 	int updates_missed = (int)round((global_time - prev_update) / timeslice);
 
@@ -168,6 +176,9 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 	
 	PRS prs = get_prs((unsigned long)(global_time * 1000.0));
 	curr_pos = prs.position;
+	curr_halo_rot = psys_params.halo_rot * global_time;
+
+	scalar_t angle = fmod(psys_params.glob_rot * global_time, two_pi);
 
 	// spawn new particles
 	scalar_t spawn = psys_params.birth_rate() * (global_time - prev_update);
@@ -195,6 +206,8 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 				bbp->texture = psys_params.billboard_tex;
 				bbp->start_color = psys_params.start_color;
 				bbp->end_color = psys_params.end_color;
+				bbp->rot = psys_params.rot;
+				bbp->birth_angle = angle;
 			}
 
 			break;
@@ -240,96 +253,78 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 	prev_update = global_time;
 }
 
-static void render_particle_buffer(int count, const Texture *tex, bool use_psprites) {
-	
-	set_lighting(false);
-	set_zwrite(false);
-	set_alpha_blending(true);
-	set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE);
-
-	if(tex) {
-		enable_texture_unit(0);
-		disable_texture_unit(1);
-		set_texture(0, tex);
-		
-		if(use_psprites) {
-			set_point_sprites(true);
-			set_point_sprite_coords(0, true);
-		}
-	}
-
-	set_texture_unit_color(0, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
-	set_texture_unit_alpha(0, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
-		
-	if(use_psprites) {
-		glPointSize(pvert_buf[0].size);
-	
-		/* I would prefer using vertex arrays, but I can't seem to be able
-		 * to make points sprites work with it. So let's leave it for the
-		 * time being
-		 */
-		glBegin(GL_POINTS);
-		for(int i=0; i<count; i++) {
-			glColor4f(pvert_buf[i].col.r, pvert_buf[i].col.g, pvert_buf[i].col.b, pvert_buf[i].col.a);
-			glVertex3f(pvert_buf[i].pos.x, pvert_buf[i].pos.y, pvert_buf[i].pos.z);
-		}
-		glEnd();
-
-		glPointSize(1.0);
-		
-	} else {	// don't use point sprites
-		for(int i=0; i<count; i++) {
-			Vertex v(pvert_buf[i].pos, 0, 0, pvert_buf[i].col);
-			draw_point(v, pvert_buf[0].size / PSPRITE_BILLBOARD_RATIO);
-		}
-	}
-
-	if(tex) {
-		if(use_psprites) {
-			set_point_sprites(true);
-			set_point_sprite_coords(0, true);
-		}
-		disable_texture_unit(0);
-	}
-
-	set_alpha_blending(false);
-	set_zwrite(true);
-	set_lighting(true);
-}
-
 void ParticleSystem::draw() const {
-	bool use_psprites = !psys_params.big_particles && !psprites_unsupported;
+	if(!ready) return;
+
+	use_psprites = !psys_params.big_particles && !psprites_unsupported;
 	
 	set_matrix(XFORM_WORLD, Matrix4x4());
 	load_xform_matrices();
 
-	int i = 0;
-	ParticleVertex *pv_ptr = pvert_buf;
-	
 	std::list<Particle*>::const_iterator iter = particles.begin();
-	while(iter != particles.end()) {
-		if(ptype == PTYPE_BILLBOARD) {
-			/* if the particles of this system are billboards
-			 * insert split them into runs of as many vertices
-			 * fit in the pvert_buf array and render them in batches.
-			 */
-			*pv_ptr++ = ((BillboardParticle*)(*iter++))->get_particle_vertex();
-			i++;
+		
+	if(ptype == PTYPE_BILLBOARD) {
+		// ------ setup render state ------
+		set_lighting(false);
+		set_zwrite(false);
+		set_alpha_blending(true);
+		set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE);
 
-			if(i >= PVERT_BUF_SIZE || iter == particles.end()) {
-				// render i particles
-				render_particle_buffer(i, psys_params.billboard_tex, use_psprites);
+		if(psys_params.billboard_tex) {
+			enable_texture_unit(0);
+			disable_texture_unit(1);
+			set_texture(0, psys_params.billboard_tex);
 
-				i = 0;
-				pv_ptr = pvert_buf;
+			if(use_psprites) {
+				set_point_sprites(true);
+				set_point_sprite_coords(0, true);
 			}
-				
-		} else {
-			(*iter++)->draw();
 		}
-	} 
 
+		set_texture_unit_color(0, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
+		set_texture_unit_alpha(0, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
+
+		/*if(use_psprites) {
+			glPointSize(pvert_buf[0].size);
+			glBegin(GL_POINTS);
+		}*/
+	}
+
+	// ------ render particles ------
+	while(iter != particles.end()) {
+		(*iter++)->draw();
+	}
+	
+	if(ptype == PTYPE_BILLBOARD) {
+		// ------ restore render states -------
+		if(use_psprites) {
+			glPointSize(1.0);
+		}
+
+		if(psys_params.billboard_tex) {
+			if(use_psprites) {
+				set_point_sprites(true);
+				set_point_sprite_coords(0, true);
+			}
+			disable_texture_unit(0);
+
+			set_matrix(XFORM_TEXTURE, Matrix4x4::identity_matrix);
+		}
+
+		set_alpha_blending(false);
+		set_zwrite(true);
+		set_lighting(true);
+	}
+
+	// ------ render a halo around the emitter if we need to ------
 	if(psys_params.halo) {
+		// construct texture matrix for halo rotation
+		Matrix4x4 mat;
+		mat.translate(Vector3(0.5, 0.5, 0.0));
+		mat.rotate(Vector3(0, 0, curr_halo_rot));
+		mat.translate(Vector3(-0.5, -0.5, 0.0));
+		set_matrix(XFORM_TEXTURE, mat);
+
 		set_alpha_blending(true);
 		set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE);
 		enable_texture_unit(0);
@@ -341,6 +336,8 @@ void ParticleSystem::draw() const {
 		set_zwrite(true);
 		disable_texture_unit(0);
 		set_alpha_blending(false);
+
+		set_matrix(XFORM_TEXTURE, Matrix4x4::identity_matrix);
 	}
 }
 
@@ -486,6 +483,12 @@ bool psys::load_particle_sys_params(const char *fname, ParticleSysParams *psp) {
 		} else if(!strcmp(opt->option, "color_end")) {
 			Vector4 v = get_vector4(opt->str_value);
 			psp->end_color = Color(v.x, v.y, v.z, v.w);
+
+		} else if(!strcmp(opt->option, "rot")) {
+			psp->rot = opt->flt_value;
+
+		} else if(!strcmp(opt->option, "glob_rot")) {
+			psp->glob_rot = opt->flt_value;
 			
 		} else if(!strcmp(opt->option, "halo")) {
 			psp->halo = get_texture(opt->str_value);
@@ -502,6 +505,9 @@ bool psys::load_particle_sys_params(const char *fname, ParticleSysParams *psp) {
 
 		} else if(!strcmp(opt->option, "halo_size-r")) {
 			psp->halo_size.range = opt->flt_value;
+			
+		} else if(!strcmp(opt->option, "halo_rot")) {
+			psp->halo_rot = opt->flt_value;
 		}
 			
 	}
