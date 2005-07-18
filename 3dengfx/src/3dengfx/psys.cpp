@@ -207,6 +207,8 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 		spawn_count--;
 	}
 
+	scalar_t dt = (global_time - prev_update) / (scalar_t)spawn_count;
+	scalar_t t = prev_update;
 	
 	for(int i=0; i<spawn_count; i++) {
 		Particle *particle;
@@ -215,6 +217,8 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 		case PTYPE_BILLBOARD:
 			particle = new BillboardParticle;
 			{
+				curr_rot = fmod(psys_params.glob_rot * t, two_pi);
+				
 				BillboardParticle *bbp = (BillboardParticle*)particle;
 				bbp->texture = psys_params.billboard_tex;
 				bbp->start_color = psys_params.start_color;
@@ -230,18 +234,22 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 			exit(-1);
 			break;
 		}
+		
+		PRS sub_prs = get_prs((unsigned long)(t * 1000.0));
 
-		particle->set_position(prs.position + psys_params.spawn_offset());
-		particle->set_rotation(prs.rotation);
-		particle->set_scaling(prs.scale);
+		particle->set_position(sub_prs.position + psys_params.spawn_offset());
+		particle->set_rotation(sub_prs.rotation);
+		particle->set_scaling(sub_prs.scale);
 
 		particle->size = psys_params.psize();
 		particle->velocity = psys_params.shoot_dir();
 		particle->friction = psys_params.friction;
-		particle->birth_time = global_time;
+		particle->birth_time = t;//global_time;
 		particle->lifespan = psys_params.lifespan();
 
 		particles.push_back(particle);
+
+		t += dt;
 	}
 	
 
