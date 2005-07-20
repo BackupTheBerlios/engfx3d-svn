@@ -101,6 +101,8 @@ void BillboardParticle::update(const Vector3 &ext_force) {
 	
 	color = blend_colors(start_color, end_color, t);
 
+	size = size_start + (size_end - size_start) * t;
+
 	angle = rot * time + birth_angle;
 }
 
@@ -140,6 +142,7 @@ void BillboardParticle::draw() const {
 
 
 ParticleSysParams::ParticleSysParams() {
+	psize_end = -1.0;
 	friction = 0.95;
 	billboard_tex = 0;
 	halo = 0;
@@ -154,7 +157,8 @@ ParticleSystem::ParticleSystem(const char *fname) {
 	SysCaps sys_caps = get_system_capabilities();
 	psprites_unsupported = !sys_caps.point_sprites || !sys_caps.point_params;
 
-	prev_update = 0.0;
+	prev_update = -1.0;
+	//XXX: test this...;
 	fraction = 0.0;
 	ptype = PTYPE_BILLBOARD;
 
@@ -207,6 +211,15 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 		spawn_count--;
 	}
 
+	Vector3 dp, pos;
+	if(prev_update < 0.0) {
+		dp = Vector3(0, 0, 0);
+		pos = curr_pos;
+	} else {
+		dp = (curr_pos - prev_pos) / (scalar_t)spawn_count;
+		pos = prev_pos;
+	}
+	
 	scalar_t dt = (global_time - prev_update) / (scalar_t)spawn_count;
 	scalar_t t = prev_update;
 	
@@ -235,20 +248,27 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 			break;
 		}
 		
-		PRS sub_prs = get_prs((unsigned long)(t * 1000.0));
+		//PRS sub_prs = get_prs((unsigned long)(t * 1000.0));
+		
 
-		particle->set_position(sub_prs.position + psys_params.spawn_offset());
-		particle->set_rotation(sub_prs.rotation);
-		particle->set_scaling(sub_prs.scale);
+		particle->set_position(pos + psys_params.spawn_offset());
+		particle->set_rotation(prs.rotation);
+		particle->set_scaling(prs.scale);
 
-		particle->size = psys_params.psize();
+		particle->size_start = psys_params.psize();
+		if(psys_params.psize_end < 0.0) {
+			particle->size_end = particle->size_start;
+		} else {
+			particle->size_end = psys_params.psize_end;
+		}
 		particle->velocity = psys_params.shoot_dir();
 		particle->friction = psys_params.friction;
-		particle->birth_time = t;//global_time;
+		particle->birth_time = t;
 		particle->lifespan = psys_params.lifespan();
 
 		particles.push_back(particle);
 
+		pos += dp;
 		t += dt;
 	}
 	
@@ -272,6 +292,7 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 	}
 
 	prev_update = global_time;
+	prev_pos = curr_pos;
 }
 
 void ParticleSystem::draw() const {
@@ -300,6 +321,7 @@ void ParticleSystem::draw() const {
 				enable_texture_unit(0);
 				disable_texture_unit(1);
 				set_texture(0, psys_params.billboard_tex);
+				set_texture_addressing(0, TEXADDR_CLAMP, TEXADDR_CLAMP);
 
 				if(use_psprites) {
 					set_point_sprites(true);
@@ -341,6 +363,7 @@ void ParticleSystem::draw() const {
 					set_point_sprites(true);
 					set_point_sprite_coords(0, true);
 				}
+				set_texture_addressing(0, TEXADDR_WRAP, TEXADDR_WRAP);
 				disable_texture_unit(0);
 
 				set_matrix(XFORM_TEXTURE, Matrix4x4::identity_matrix);
@@ -472,6 +495,9 @@ bool psys::load_particle_sys_params(const char *fname, ParticleSysParams *psp) {
 		} else if(!strcmp(opt->option, "psize-r")) {
 			psp->psize.range = opt->flt_value;
 
+		} else if(!strcmp(opt->option, "psize_end")) {
+			psp->psize_end = opt->flt_value;
+
 		} else if(!strcmp(opt->option, "life")) {
 			psp->lifespan.num = opt->flt_value;
 
@@ -544,8 +570,13 @@ bool psys::load_particle_sys_params(const char *fname, ParticleSysParams *psp) {
 			
 		} else if(!strcmp(opt->option, "halo_rot")) {
 			psp->halo_rot = opt->flt_value;
-		}
 			
+		} else if(!strcmp(opt->option, "big_particles")) {
+			if(!strcmp(opt->str_value, "true")) {
+				psp->big_particles = true;
+			}
+
+		}	
 	}
 
 	psp->shoot_dir = FuzzyVec3(Fuzzy(shoot.x, shoot_range.x), Fuzzy(shoot.y, shoot_range.y), Fuzzy(shoot.z, shoot_range.z));

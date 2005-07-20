@@ -64,7 +64,7 @@ class Particle : public XFormNode {
 public:
 	Vector3 velocity;
 	scalar_t friction;
-	scalar_t size;
+	scalar_t size, size_start, size_end;
 	scalar_t birth_time, lifespan;
 
 	
@@ -102,6 +102,7 @@ class MeshParticle : public Particle {
 
 struct ParticleSysParams {
 	Fuzzy psize;			// particle size
+	scalar_t psize_end;		// end size (end of life)
 	Fuzzy lifespan;			// lifespan in seconds
 	Fuzzy birth_rate;		// birth rate in particles per second
 	Vector3 gravity;		// gravitual force to be applied to all particles
@@ -143,6 +144,7 @@ protected:
 
 	scalar_t fraction;
 	scalar_t prev_update;
+	Vector3 prev_pos;
 
 	// current variables are calculated during each update()
 	scalar_t curr_time;
