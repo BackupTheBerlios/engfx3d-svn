@@ -213,8 +213,9 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 
 	Vector3 dp, pos;
 	if(prev_update < 0.0) {
-		dp = Vector3(0, 0, 0);
-		pos = curr_pos;
+		prev_pos = curr_pos;
+		prev_update = curr_time;
+		return;
 	} else {
 		dp = (curr_pos - prev_pos) / (scalar_t)spawn_count;
 		pos = prev_pos;
