@@ -1172,7 +1172,7 @@ bool screen_capture(char *fname, enum image_file_format fmt) {
 	if(!fname) {
 		static char fname_buf[50];
 		fname = fname_buf;
-		sprintf(fname, "3dengfx_shot%02d.%s", scr_num++, suffix[fmt]);
+		sprintf(fname, "3dengfx_shot%04d.%s", scr_num++, suffix[fmt]);
 	}
 
 	unsigned int flags = get_image_save_flags();

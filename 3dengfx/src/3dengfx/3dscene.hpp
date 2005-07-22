@@ -111,6 +111,8 @@ public:
 	void render_shadows(unsigned long msec = XFORM_LOCAL_PRS) const;
 	void render(unsigned long msec = XFORM_LOCAL_PRS) const;
 	void render_cube_map(Object *obj, unsigned long msec = XFORM_LOCAL_PRS) const;
+
+	void render_sequence(unsigned long start, unsigned long end, int fps = 30, const char *out_dir = "frames");
 };
 
 #endif	// _3DSCENE_HPP_

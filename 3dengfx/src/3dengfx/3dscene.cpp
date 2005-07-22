@@ -409,3 +409,53 @@ bool Scene::render_all_cube_maps(unsigned long msec) const {
 
 	return did_some;
 }
+
+#include "fxwt/text.hpp"
+#ifdef __unix__
+#include <sys/stat.h>
+#endif	// __unix__
+
+void Scene::render_sequence(unsigned long start, unsigned long end, int fps, const char *out_dir) {
+#ifdef __unix__
+	// change to the specified directory
+	char curr_dir[PATH_MAX];
+	getcwd(curr_dir, PATH_MAX);
+
+	struct stat sbuf;
+	if(stat(out_dir, &sbuf) == -1) {
+		mkdir(out_dir, 0770);
+	}	
+	
+	chdir(out_dir);
+#endif	// __unix__
+
+	warning("Sequence rendering is experimental; this may make the program unresponsive while it renders, be patient.");
+
+	// render frames until we reach the end time
+	unsigned long time = start;
+	unsigned long dt = 1000 / fps;
+
+	while(time < end) {
+		render(time);
+		screen_capture();
+
+		// draw progress bar
+		scalar_t t = (scalar_t)time / (scalar_t)(end - start);
+		set_zbuffering(false);
+		set_lighting(false);
+		set_alpha_blending(true);
+		set_blend_func(BLEND_ONE_MINUS_DST_COLOR, BLEND_ZERO);
+		draw_full_quad(Vector3(0.0, 0.49), Vector3(t, 0.51), Color(1, 1, 1));
+		set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE_MINUS_SRC_ALPHA);
+		set_alpha_blending(false);
+		set_lighting(true);
+		set_zbuffering(true);
+		
+		flip();
+		time += dt;
+	}
+
+#ifdef __unix__
+	chdir(curr_dir);
+#endif	// __unix__
+}
