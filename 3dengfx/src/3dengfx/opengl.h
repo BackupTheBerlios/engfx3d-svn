@@ -1,7 +1,6 @@
 /*
 This file is part of the 3dengfx, realtime visualization system.
-
-Copyright (c) 2004, 2005 John Tsiombikas <nuclear@siggraph.org>
+Copyright (C) 2004, 2005 John Tsiombikas <nuclear@siggraph.org>
 
 3dengfx is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -44,11 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define OPENGL_1_5
 #endif	/* GL_VERSION_1_5 */
 
-
-#include <GL/glu.h>
-
-#undef GL_GLEXT_PROTOTYPES
-#include "glext.h"
+#include "sgi_glext.h"
 
 /* GL_ARB_transpose_matrix */
 
