@@ -1,5 +1,5 @@
-#ifndef __glext_h_
-#define __glext_h_
+#ifndef SGI_GLEXT_H_
+#define SGI_GLEXT_H_
 
 #ifdef __cplusplus
 extern "C" {

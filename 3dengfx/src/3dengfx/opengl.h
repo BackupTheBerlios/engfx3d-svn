@@ -43,6 +43,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define OPENGL_1_5
 #endif	/* GL_VERSION_1_5 */
 
+#ifdef GL_GLEXT_VERSION
+#undef GL_GLEXT_VERSION
+#endif	/* GL_GLEXT_VERSION */
+
 #include "sgi_glext.h"
 
 /* GL_ARB_transpose_matrix */
