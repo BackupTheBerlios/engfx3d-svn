@@ -105,6 +105,7 @@ void set_texture(int tex_unit, const Texture *tex);
 //void set_texture_factor(dword factor);
 void set_mip_mapping(bool enable);
 void set_material(const Material &mat);
+void use_vertex_colors(bool enable);
 
 void set_render_target(Texture *tex, CubeMapFace cube_map_face = CUBE_MAP_PX);
 

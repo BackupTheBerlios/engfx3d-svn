@@ -962,13 +962,21 @@ void set_material(const Material &mat) {
 	mat.set_glmaterial();
 }
 
+void use_vertex_colors(bool enable) {
+	if(enable) {
+		glEnable(GL_COLOR_MATERIAL);
+	} else {
+		glDisable(GL_COLOR_MATERIAL);
+	}
+}
+
 
 void set_render_target(Texture *tex, CubeMapFace cube_map_face) {
 	static std::stack<Texture*> rt_stack;
 	static std::stack<CubeMapFace> face_stack;
 	
 	Texture *prev = rt_stack.empty() ? 0 : rt_stack.top();
-	CubeMapFace prev_face;
+	CubeMapFace prev_face = CUBE_MAP_PX; // just to get rid of the uninitialized var warning
 	if(!face_stack.empty()) prev_face = face_stack.top();
 
 	if(tex == prev) return;

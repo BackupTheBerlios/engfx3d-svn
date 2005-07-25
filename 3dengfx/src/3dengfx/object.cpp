@@ -47,6 +47,7 @@ RenderParams::RenderParams() {
 	hidden = false;
 	show_normals = false;
 	show_normals_scale = 0.5;
+	use_vertex_color = false;
 }
 	
 
@@ -185,6 +186,10 @@ void Object::set_auto_global(bool enable) {
 	mat.auto_refl = enable;
 }
 
+void Object::set_use_vertex_color(bool enable) {
+	render_params.use_vertex_color = enable;
+}
+
 void Object::apply_xform(unsigned long time) {
 	world_mat = get_prs(time).get_xform_matrix();
 	mesh.apply_xform(world_mat);
@@ -321,9 +326,11 @@ void Object::render_hack(unsigned long time) {
 	if(render_params.gfxprog) ::set_gfx_program(render_params.gfxprog);
 
 	if(mat.two_sided) set_backface_culling(false);
+	if(render_params.use_vertex_color) ::use_vertex_colors(true);
 	
 	draw(*mesh.get_vertex_array(), *mesh.get_index_array());
 
+	if(render_params.use_vertex_color) ::use_vertex_colors(false);
 	if(mat.two_sided) set_backface_culling(true);
 
 	if(mat.wireframe) ::set_wireframe(false);
