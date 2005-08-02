@@ -57,6 +57,7 @@ public:
 	Vertex(const Vector3 &position, scalar_t tu = 0.0f, scalar_t tv = 0.0f, const Color &color = Color(1.0f, 1.0f, 1.0f));
 };
 
+#define NO_ADJFACE 0xFFFFFFFF
 
 class Edge {
 public:
@@ -64,7 +65,7 @@ public:
 	unsigned long adjfaces[2];
 
 	Edge();
-	Edge(unsigned long v1, unsigned long v2, unsigned long af1 = 0, unsigned long af2 = 0);
+	Edge(unsigned long v1, unsigned long v2, unsigned long af1 = NO_ADJFACE, unsigned long af2 = NO_ADJFACE);
 };
 
 

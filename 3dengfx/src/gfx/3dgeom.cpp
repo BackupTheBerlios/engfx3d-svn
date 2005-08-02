@@ -63,7 +63,8 @@ Vertex::Vertex(const Vector3 &position, scalar_t tu, scalar_t tv, const Color &c
 /////////// Edge class implementation ///////////
 
 Edge::Edge() {
-	vertices[0] = vertices[1] = adjfaces[0] = adjfaces[1] = 0;
+	vertices[0] = vertices[1] = 0;
+	adjfaces[0] = adjfaces[1] = NO_ADJFACE;
 }
 
 Edge::Edge(unsigned long v1, unsigned long v2, unsigned long af1, unsigned long af2) {
@@ -243,9 +244,10 @@ TriMesh::TriMesh(const Vertex *vdata, unsigned long vcount, const Triangle *tdat
 	set_data(vdata, vcount, tdata, tcount);
 }
 
-// TODO: see if we can optimize this to linear complexity, i.e. get rid of the inner loop.
 void TriMesh::calculate_edges() {
 	std::cerr << "calc_edges()\n";
+
+/*
 	vector<Edge> edges;
 
 	Triangle *tptr = tarray.get_mod_data();
@@ -256,7 +258,7 @@ void TriMesh::calculate_edges() {
 			bool new_edge = true;
 			
 			// search the list of edges for an edge with the same two vertices
-			/*for(unsigned int k=0; k<edges.size(); k++) {
+			for(unsigned int k=0; k<edges.size(); k++) {
 				if((edges[k].vertices[0] == vindex1 || edges[k].vertices[0] == vindex2)
 						&& (edges[k].vertices[1] == vindex1 || edges[k].vertices[1] == vindex2)) {
 					
@@ -267,7 +269,7 @@ void TriMesh::calculate_edges() {
 					new_edge = false;
 					break;
 				}
-			}*/
+			}
 
 			// if we did not find this edge in the list, add a new one.
 			if(new_edge) {
@@ -280,6 +282,74 @@ void TriMesh::calculate_edges() {
 
 	earray.set_data(&edges[0], edges.size());
 	edges_valid = true;
+*/
+	
+	unsigned int vcount = varray.get_count();
+	vector<Edge> *edge_table = new vector<Edge>[vcount];
+	const Triangle *tris = tarray.get_data();
+	int tcount = tarray.get_count();
+	unsigned int num_edges = 0;
+
+	// Triangle loop
+	for (unsigned int i=0; i<tcount; i++)
+	{
+		int a, b, temp;
+		for (int j=0; j<3; j++)
+		{
+			a = tris[i].vertices[j];
+			b = tris[i].vertices[(j + 1) % 3];
+
+			if (a > b)
+			{
+				temp = b;
+				b = a;
+				a = temp;
+			}
+
+			int edge_found = -1;
+			for (unsigned int edge = 0; edge < edge_table[a].size(); edge++)
+			{
+				if (edge_table[a][edge].vertices[1] == b)
+				{
+					edge_found = edge;
+					break;
+				}
+			}
+
+			if (edge_found != -1)
+			{
+				// edge was already in the list
+				// add the second face to this edge
+				edge_table[a][edge_found].adjfaces[1] = i;
+			}
+			else
+			{
+				// add a new edge to the list
+				Edge new_edge(a, b, i);
+				edge_table[a].push_back(new_edge);
+				num_edges++;
+			}
+		}
+	} // End triangle loop
+
+	// collect edges
+	Edge *edges = new Edge[num_edges];
+	int k = 0;
+	for (unsigned int i=0; i<vcount; i++)
+	{
+		for (unsigned int j=0; j<edge_table[i].size(); j++)
+		{
+			edges[k] = edge_table[i][j];
+			k++;
+		}
+	}
+
+	array.set_data(edges, num_edges);
+	edges_valid = true;
+
+	// cleanup
+	delete [] edge_table;
+	delete [] edges;
 }
 
 const IndexArray *TriMesh::get_index_array() {
