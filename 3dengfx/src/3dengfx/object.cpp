@@ -48,6 +48,7 @@ RenderParams::RenderParams() {
 	show_normals = false;
 	show_normals_scale = 0.5;
 	use_vertex_color = false;
+	taddr = TEXADDR_WRAP;
 }
 	
 
@@ -190,6 +191,10 @@ void Object::set_use_vertex_color(bool enable) {
 	render_params.use_vertex_color = enable;
 }
 
+void Object::set_texture_addressing(TextureAddressing taddr) {
+	render_params.taddr = taddr;
+}
+
 void Object::apply_xform(unsigned long time) {
 	world_mat = get_prs(time).get_xform_matrix();
 	mesh.apply_xform(world_mat);
@@ -269,6 +274,7 @@ void Object::render_hack(unsigned long time) {
 		set_texture_unit_color(tex_unit, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
 		set_texture_unit_alpha(tex_unit, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
 		//tex_id = mat.tex[TEXTYPE_DIFFUSE]->tex_id;
+		::set_texture_addressing(tex_unit, render_params.taddr, render_params.taddr);
 		tex_unit++;
 	}
 	
@@ -292,7 +298,7 @@ void Object::render_hack(unsigned long time) {
 
 			set_matrix(XFORM_TEXTURE, inv_view, tex_unit);
 
-			set_texture_addressing(tex_unit, TEXADDR_CLAMP, TEXADDR_CLAMP);
+			::set_texture_addressing(tex_unit, TEXADDR_CLAMP, TEXADDR_CLAMP);
 		} else {
 			glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
 			glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
@@ -351,7 +357,7 @@ void Object::render_hack(unsigned long time) {
 		glLoadIdentity();
 		glMatrixMode(GL_MODELVIEW);
 		set_matrix(XFORM_TEXTURE, Matrix4x4::identity_matrix, i);
-		set_texture_addressing(tex_unit, TEXADDR_WRAP, TEXADDR_WRAP);
+		::set_texture_addressing(tex_unit, TEXADDR_WRAP, TEXADDR_WRAP);
 	}
 
 	if(render_params.show_normals) {

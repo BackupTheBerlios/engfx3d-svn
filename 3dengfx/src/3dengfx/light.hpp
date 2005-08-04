@@ -60,8 +60,18 @@ public:
 	PointLight(const Vector3 &pos=Vector3(0,0,0), const Color &col=Color(1.0f, 1.0f, 1.0f));
 	virtual ~PointLight();
 
-	void set_gl_light(int n, unsigned long time = XFORM_LOCAL_PRS) const;
+	virtual void set_gl_light(int n, unsigned long time = XFORM_LOCAL_PRS) const;
 };
-	
+
+class DirLight : public Light {
+private:
+	Vector3 dir;	// actually get rid of this and work with the PRS directly?
+
+public:
+	DirLight(const Vector3 &dir=Vector3(0, 0, 1), const Color &col=Color(1.0f, 1.0f, 1.0f));
+	virtual ~DirLight();
+
+	virtual void set_gl_light(int n, unsigned long time = XFORM_LOCAL_PRS) const;
+};
 
 #endif	// _LIGHT_HPP_

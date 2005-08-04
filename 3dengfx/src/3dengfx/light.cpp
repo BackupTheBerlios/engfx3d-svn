@@ -93,6 +93,7 @@ Vector3 Light::get_attenuation_vector() const {
 	return Vector3(attenuation[0], attenuation[1], attenuation[2]);
 }
 
+// ------- point lights -------
 
 PointLight::PointLight(const Vector3 &pos, const Color &col) {
 	set_position(pos);
@@ -133,6 +134,48 @@ void PointLight::set_gl_light(int n, unsigned long time) const {
 	glLightf(light_num, GL_CONSTANT_ATTENUATION, (float)attenuation[0]);
 	glLightf(light_num, GL_LINEAR_ATTENUATION, (float)attenuation[1]);
 	glLightf(light_num, GL_QUADRATIC_ATTENUATION, (float)attenuation[2]);
+	
+	glEnable(light_num);
+	
+	glPopMatrix();
+
+	if(!engfx_state::bump_light) set_bump_light(this);
+}
+
+
+
+// ------- directional lights -------
+
+DirLight::DirLight(const Vector3 &dir, const Color &col) {
+	this->dir = dir;
+	diffuse_color = specular_color = col;
+}
+
+DirLight::~DirLight() {}
+
+void DirLight::set_gl_light(int n, unsigned long time) const {
+	int light_num = GL_LIGHT0 + n;
+	
+	Vector3 ldir = dir.transformed(get_prs(time).rotation);
+	
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	Matrix4x4 test = engfx_state::view_matrix;
+	load_matrix_gl(test);
+
+	Color amb = ambient_color * intensity;
+	Color dif = diffuse_color * intensity;
+	Color spec = specular_color * intensity;
+
+	float position[] = {-ldir.x, -ldir.y, -ldir.z, 0.0f};
+	float gl_amb[] = {amb.r, amb.g, amb.b, ambient_color.a};
+	float gl_dif[] = {dif.r, dif.g, dif.b, diffuse_color.a};
+	float gl_spec[] = {spec.r, spec.g, spec.b, specular_color.a};
+	
+	glLightfv(light_num, GL_POSITION, position);
+	glLightfv(light_num, GL_AMBIENT, gl_amb);
+	glLightfv(light_num, GL_DIFFUSE, gl_dif);
+	glLightfv(light_num, GL_SPECULAR, gl_spec);
 	
 	glEnable(light_num);
 	

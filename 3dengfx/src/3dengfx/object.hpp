@@ -48,6 +48,7 @@ struct RenderParams {
 	scalar_t show_normals_scale;
 	bool two_sided;
 	bool use_vertex_color;
+	TextureAddressing taddr;
 
 	RenderParams();
 };
@@ -109,6 +110,7 @@ public:
 	void set_show_normals_scale(scalar_t scale);
 	void set_auto_global(bool enable);
 	void set_use_vertex_color(bool enable);
+	void set_texture_addressing(TextureAddressing taddr);
 
 	void apply_xform(unsigned long time = XFORM_LOCAL_PRS);
 

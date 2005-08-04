@@ -300,7 +300,7 @@ static bool load_material(Lib3dsFile *file, const char *name, Material *mat) {
 	
 	tpath = tex_path(m->bump_map.name);
 	if(tpath && (bump = get_texture(tpath))) {
-		mat->set_texture(bump, TEXTYPE_BUMPMAP);
+		//FIXME: make dot3 work first mat->set_texture(bump, TEXTYPE_BUMPMAP);
 	}
 
 	tpath = tex_path(m->self_illum_map.name);

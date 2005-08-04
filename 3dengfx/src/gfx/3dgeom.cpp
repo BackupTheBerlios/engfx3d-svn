@@ -287,7 +287,7 @@ void TriMesh::calculate_edges() {
 	unsigned int vcount = varray.get_count();
 	vector<Edge> *edge_table = new vector<Edge>[vcount];
 	const Triangle *tris = tarray.get_data();
-	int tcount = tarray.get_count();
+	unsigned int tcount = tarray.get_count();
 	unsigned int num_edges = 0;
 
 	// Triangle loop
@@ -344,7 +344,7 @@ void TriMesh::calculate_edges() {
 		}
 	}
 
-	array.set_data(edges, num_edges);
+	earray.set_data(edges, num_edges);
 	edges_valid = true;
 
 	// cleanup
