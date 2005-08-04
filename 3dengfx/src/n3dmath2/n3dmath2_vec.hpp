@@ -73,6 +73,9 @@ public:
 
 	void transform(const Matrix3x3 &mat);
 	Vector2 transformed(const Matrix3x3 &mat) const;
+
+	void rotate(scalar_t angle);
+	Vector2 rotated(scalar_t angle) const;
 			
 	Vector2 reflection(const Vector2 &normal) const;
 	Vector2 refraction(const Vector2 &normal, scalar_t src_ior, scalar_t dst_ior) const;
@@ -137,6 +140,9 @@ public:
 	Vector3 transformed(const Matrix4x4 &mat) const;
 	void transform(const Quaternion &quat);
 	Vector3 transformed(const Quaternion &quat) const;
+
+	void rotate(const Vector3 &euler);
+	Vector3 rotated(const Vector3 &euler) const;
 	
 	Vector3 reflection(const Vector3 &normal) const;
 	Vector3 refraction(const Vector3 &normal, scalar_t src_ior, scalar_t dst_ior) const;

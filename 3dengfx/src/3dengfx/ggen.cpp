@@ -361,6 +361,98 @@ void create_torus(TriMesh *mesh, scalar_t circle_rad, scalar_t revolv_rad, int s
 	delete [] circle;
 }
 
+
+/* create_revolution - (JT)
+ * Creates a surface of revolution by rotating a curve around the Y axis.
+ */
+void create_revolution(TriMesh *mesh, const Curve &curve, int udiv, int vdiv) {
+	if(udiv < 3) udiv = 3;
+	if(vdiv < 1) vdiv = 1;
+
+	int slices = udiv;
+	int stacks = vdiv + 1;
+
+	// create the slice that will be revolved to create the mesh
+	Vector3 *slice = new Vector3[stacks];
+	Vector3 *slice_normal = new Vector3[stacks];
+	
+	for(int i=0; i<stacks; i++) {
+		scalar_t t = (scalar_t)i / (scalar_t)vdiv;
+		slice[i] = curve(t);
+
+		// calculate normal
+		Vector3 bitangent = (curve(t + 0.0001) - curve(t - 0.0001)).normalized();
+		Vector3 tp1 = slice[i].rotated(Vector3(0.0, DEG_TO_RAD(3), 0.0));
+		Vector3 tp2 = slice[i].rotated(Vector3(0.0, -DEG_TO_RAD(3), 0.0));
+		Vector3 tangent = (tp1 - tp2).normalized();
+
+		slice_normal[i] = cross_product(tangent, bitangent);
+	}
+	
+	int vcount = stacks * slices;
+	int quad_count = udiv * vdiv;
+	int tcount = quad_count * 2;
+	
+	Vertex *varray = new Vertex[vcount];
+	Triangle *tarray = new Triangle[tcount];
+
+	Vertex *vptr = varray;
+	Triangle *tptr = tarray;
+	
+	for(int i=0; i<slices; i++) {
+		Matrix4x4 rot;
+		rot.set_rotation(Vector3(0.0, two_pi * (scalar_t)i / (scalar_t)udiv, 0.0));
+		
+		for(int j=0; j<stacks; j++) {
+			// create the vertex
+			vptr->pos = slice[j].transformed(rot);
+			vptr->tex[0].u = vptr->tex[1].u = (scalar_t)i / (scalar_t)udiv;
+			vptr->tex[0].v = vptr->tex[1].v = (scalar_t)j / (scalar_t)vdiv;
+			vptr->normal = slice_normal[j].transformed(rot);
+			vptr++;
+
+			if(j < vdiv) {
+				// create the quad
+				Quad q;
+				q.vertices[0] = j + (i % slices) * stacks;
+				q.vertices[1] = j + ((i + 1) % slices) * stacks;
+				q.vertices[2] = (j + 1) + ((i + 1) % slices) * stacks;
+				q.vertices[3] = (j + 1) + (i % slices) * stacks;
+
+				// triangulate
+				tptr->vertices[0] = q.vertices[0];
+				tptr->vertices[1] = q.vertices[1];
+				tptr->vertices[2] = q.vertices[2];
+				tptr++;
+				tptr->vertices[0] = q.vertices[0];
+				tptr->vertices[1] = q.vertices[2];
+				tptr->vertices[2] = q.vertices[3];
+				tptr++;
+			}
+		}
+	}
+
+	mesh->set_data(varray, vcount, tarray, tcount);
+	delete [] varray;
+	delete [] tarray;
+	delete [] slice;
+	delete [] slice_normal;
+}
+
+/* create_revolution - helper function - (JT)
+ * accepts an array of data points, fits a spline through them and passes the rest
+ * to the real create_revolution defined above.
+ */
+void create_revolution(TriMesh *mesh, Vector3 *data, int count, int udiv, int vdiv) {
+	CatmullRomSplineCurve spline;
+	for(int i=0; i<count; i++) {
+		spline.add_control_point(data[i]);
+	}
+	spline.set_arc_parametrization(true);
+
+	create_revolution(mesh, spline, udiv, vdiv);
+}
+
 /* CreateBezierPatch - (MG)
  * overloaded function that gets a vector3 array
  * and makes a single Bezier patch
