@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 using std::list;
 using namespace fxwt;
 
-static long CALLBACK handle_event(HWND__ *win, unsigned int msg, unsigned int wparam, long lparam);
+long CALLBACK fxwt_win32_handle_event(HWND__ *win, unsigned int msg, unsigned int wparam, long lparam);
 static void button_event(int bn, bool state, int x, int y);
 static int vkey_to_keysym(unsigned int vkey);
 
@@ -51,7 +51,7 @@ void fxwt::set_window_title(const char *title) {
 }
 
 void fxwt::swap_buffers() {
-	SwapBuffers(fxwt_win32_hdc);
+	SwapBuffers(fxwt_win32_dc);
 	Sleep(0);
 }
 
@@ -81,7 +81,7 @@ int fxwt::main_loop() {
 	return 0;
 }
 
-static long CALLBACK handle_event(HWND__ *win, unsigned int msg, unsigned int wparam, long lparam) {
+long CALLBACK fxwt_win32_handle_event(HWND__ *win, unsigned int msg, unsigned int wparam, long lparam) {
 	static int window_mapped;
 
 	switch(msg) {
@@ -118,7 +118,7 @@ static long CALLBACK handle_event(HWND__ *win, unsigned int msg, unsigned int wp
 		{
 			list<void (*)(int, int)>::iterator iter = motion_handlers.begin();
 			while(iter != motion_handlers.end()) {
-				(*iter++)(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
+				(*iter++)(LOWORD(lparam), HIWORD(lparam));
 			}
 		}
 		break;

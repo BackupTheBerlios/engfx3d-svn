@@ -6,6 +6,7 @@ prefix=/usr/local
 gfx=native
 png=yes
 jpeg=yes
+ft=yes
 
 for arg
 do
@@ -37,6 +38,12 @@ do
 	--disable-jpeg)
 		jpeg=no;;
 
+	#enable/disable freetype support
+	--enable-ft)
+		ft=yes;;
+	--disable-ft)
+		ft=no;;
+
 	--help)
 		echo 'usage: ./configure [options]'
 		echo 'options:'
@@ -46,6 +53,8 @@ do
 		echo '  --disable-png: disable png support'
 		echo '  --enable-jpeg: enable jpeg support, requres libjpeg (defaul)'
 		echo '  --disable-jpeg: disable jpeg support'
+		echo '  --enable-ft: enable freetype support (default)'
+		echo '  --disable-ft: disable freetype support'
 		echo '  --help: this help screen'
 		echo 'all invalid options are silently ignored.'
 		exit 0
@@ -91,10 +100,14 @@ if [ "$jpeg" == "no" ]; then
 	echo '#define IMGLIB_NO_JPEG' >> $cfg_file
 fi
 
+if [ "$ft" == "no" ]; then
+	echo '#define FXWT_NO_FREETYPE' >>$cfg_file
+fi
+
 echo '#if GFX_LIBRARY == NATIVE' >>$cfg_file
-echo '#if defined(__unix__)' >>$cfg_file
+echo '#if defined(unix) || defined(__unix__)' >>$cfg_file
 echo '#define NATIVE_LIB		NATIVE_X11' >>$cfg_file
-echo '#elif defined(WIN32)' >>$cfg_file
+echo '#elif defined(WIN32) || defined(__WIN32__)' >>$cfg_file
 echo '#define NATIVE_LIB		NATIVE_WIN32' >>$cfg_file
 echo '#endif	/* unix/win32 */' >>$cfg_file
 echo '#endif	/* GFX_LIBRARY == NATIVE */' >>$cfg_file

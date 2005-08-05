@@ -23,6 +23,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Author: John Tsiombikas 2005
  */
 
+#include "3dengfx_config.h"
+
+#ifndef FXWT_NO_FREETYPE
 #include <vector>
 #include <cstdio>
 #include <cassert>
@@ -349,3 +352,57 @@ static Texture *pixel_buf_to_texture(const PixelBuffer &pbuf) {
 	tex->unlock();*/
 	return tex;
 }
+
+#else		// if we excluded freetype dependencies from compilation
+
+#include "text.hpp"
+#include "common/err_msg.h"
+
+using namespace fxwt;
+
+#define FT_NOT_COMPILED		"some text-rendering function is called, but freetype support is not compiled in"
+
+bool fxwt::text_init() {
+	return false;
+}
+
+void fxwt::text_close() {}
+
+void fxwt::set_text_render_mode(TextRenderMode mode) {
+	error(FT_NOT_COMPILED);
+}
+
+void fxwt::set_font_size(int sz) {
+	error(FT_NOT_COMPILED);
+}
+
+int fxwt::get_font_size() {
+	error(FT_NOT_COMPILED);
+	return 0;
+}
+
+bool fxwt::set_font(Font fnt) {
+	error(FT_NOT_COMPILED);
+	return false;
+}
+
+bool fxwt::set_font(FontStyle fstyle) {
+	error(FT_NOT_COMPILED);
+	return false;
+}
+
+const char *fxwt::get_font_name(Font fnt) {
+	error(FT_NOT_COMPILED);
+	return 0;
+}
+
+Texture *fxwt::get_text(const char *text_str) {
+	error(FT_NOT_COMPILED);
+	return 0;
+}
+
+void fxwt::print_text(const char *text_str, const Vector2 &pos, scalar_t size, const Color &col) {
+	error(FT_NOT_COMPILED);
+}
+
+#endif	// FXWT_NO_FREETYPE

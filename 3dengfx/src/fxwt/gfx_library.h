@@ -51,7 +51,7 @@
 void *glXGetProcAddress(const char *name);
 #endif	/* GLX_ARB_get_proc_address */
 
-#elif defined(WIN32)
+#elif defined(WIN32) || defined(__WIN32__)
 #define glGetProcAddress(x)		wglGetProcAddress(x)
 #endif /* __unix__ */
 

@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "3dengfx/3denginefx.hpp"
 #include "common/err_msg.h"
 
+long CALLBACK fxwt_win32_handle_event(HWND__ *win, unsigned int msg, unsigned int wparam, long lparam);
+
 HWND__ *fxwt_win32_win;
 HDC__ *fxwt_win32_dc;
 static HGLRC__ *wgl_ctx;
@@ -51,13 +53,13 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 	wc.hCursor = LoadCursor(0, IDC_ARROW);
 	wc.hIcon = wc.hIconSm = LoadIcon(0, IDI_APPLICATION);
 	wc.hInstance = pid;
-	wc.lpfnWndProc = HandleEvents;
+	wc.lpfnWndProc = fxwt_win32_handle_event;
 	wc.lpszClassName = "win32_sucks_big_time";
 	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	RegisterClassEx(&wc);
 
 	unsigned long style = WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-	win = CreateWindow("win32_sucks_big_time", "3dengfx/win32", style, 0, 0, iparams->x, iparams->y, 0, 0, pid, 0);
+	win = CreateWindow("win32_sucks_big_time", "3dengfx/win32", style, 0, 0, gparams->x, gparams->y, 0, 0, pid, 0);
 	dc = GetDC(win);
 
 	// determine color bits
@@ -101,7 +103,7 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | PFD_DRAW_TO_WINDOW;
 	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cColorBits = gparams->bpp;
-	pfd.cDepthBits = depth_bits;
+	pfd.cDepthBits = zbits;
 	pfd.cStencilBits = stencil_bits;
 	pfd.iLayerType = PFD_MAIN_PLANE;
 
@@ -109,7 +111,7 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 
 	int pix_format = ChoosePixelFormat(dc, &pfd);
 	if(!pix_format) {
-		error("ChoosePixelFormat() failed");
+		error("ChoosePixelFormat() failed: %d", GetLastError());
 		ReleaseDC(win, dc);
 		DestroyWindow(win);
 		return false;
@@ -148,9 +150,9 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 void fxwt::destroy_graphics() {
 	info("Shutting down WGL");
 	wglMakeCurrent(0, 0);
-	glDeleteContext(wgl_ctx);
-	ReleaseDC(win, dc);
-	DestroyWindow(win);
+	wglDeleteContext(wgl_ctx);
+	ReleaseDC(fxwt_win32_win, fxwt_win32_dc);
+	DestroyWindow(fxwt_win32_win);
 }
 
 #endif	// GFX_LIBRARY == NATIVE && NATIVE_LIB == NATIVE_WIN32

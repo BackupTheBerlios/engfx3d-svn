@@ -1,11 +1,15 @@
 obj :=
 
+#CC := i586-mingw32msvc-gcc
+#CXX := i586-mingw32msvc-g++
+#AR := i586-mingw32msvc-ar
+
 #opt := -O3 -ffast-math -march=pentium4
 opt := -g
 inc_flags := -Isrc -Ilibs -I/usr/local/include
 
-CXXFLAGS := $(opt) -ansi -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
-CFLAGS := $(opt) -std=c89 -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
+CXXFLAGS := $(opt) -ansi -pedantic -Wall $(inc_flags)
+CFLAGS := $(opt) -std=c89 -pedantic -Wall $(inc_flags)
 
 include src/3dengfx/Makefile-part
 include src/gfx/Makefile-part
@@ -17,17 +21,10 @@ include src/sim/Makefile-part
 include libs/lib3ds/Makefile-part
 
 .PHONY: all
-all: lib3dengfx.so.0.1.0 lib3dengfx.a
-
-.PHONY: shared
-shared: lib3dengfx.so.0.1.0
+all: lib3dengfx.a
 
 .PHONY: static
 static: lib3dengfx.a
-
-lib3dengfx.so.0.1.0: 3dengfx-config $(obj)
-	$(CXX) -shared -Wl,-soname,lib3dengfx.so.0 -o $@ $(obj)
-	@echo '---- shared library created successfully! ----'
 
 lib3dengfx.a: 3dengfx-config $(obj)
 	$(AR) rcs $@ $(obj)
@@ -46,16 +43,8 @@ include $(obj:.o=.d)
 
 .PHONY: clean
 clean:
-	$(RM) $(obj) lib3dengfx.so.0.1.0 lib3dengfx.a
+	$(RM) $(obj) lib3dengfx.a
 
 .PHONY: cleandep
 cleandep:
 	find . \( -name '*.d' -o -name '*.d.*' \) -exec $(RM) '{}' ';'
-
-.PHONY: install
-install:
-	inst/inst
-
-.PHONY: remove
-remove:
-	inst/inst -r
