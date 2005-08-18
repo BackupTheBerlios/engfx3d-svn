@@ -78,8 +78,9 @@ public:
 	void add_curve(Curve *curve);
 	void add_particle_sys(ParticleSystem *p);
 
-	void remove_object(const Object *obj);
-	void remove_light(const Light *light);
+	bool remove_light(const Light *light);
+	bool remove_object(const Object *obj);
+	bool remove_particle_sys(const ParticleSystem *p);
 
 	Camera *get_camera(const char *name);
 	Light *get_light(const char *name);

@@ -40,7 +40,7 @@ void create_torus(TriMesh *mesh, scalar_t circle_rad, scalar_t revolv_rad, int s
 
 // surfaces of revolution
 void create_revolution(TriMesh *mesh, const Curve &curve, int udiv, int vdiv);
-void create_revolution(TriMesh *mesh, Vector3 *data, int count, int udiv, int vdiv);
+void create_revolution(TriMesh *mesh, const Vector3 *data, int count, int udiv, int vdiv);
 
 // bezier surface construction
 void create_bezier_patch(TriMesh *mesh, const BezierSpline &u0, const BezierSpline &u1, const BezierSpline &u2, const BezierSpline &u3, int subdiv);

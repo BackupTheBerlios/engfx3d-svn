@@ -135,26 +135,34 @@ void Scene::add_particle_sys(ParticleSystem *p) {
 	psys.push_back(p);
 }
 
-void Scene::remove_object(const Object *obj) {
-	std::list<Object *>::iterator iter = objects.begin();
-	while(iter != objects.end()) {
-		if(obj == *iter) {
-			objects.erase(iter);
-			return;
-		}
-		iter++;
-	}
-}
 
-void Scene::remove_light(const Light *light) {
+bool Scene::remove_light(const Light *light) {
 	for(int i=0; i<8; i++) {
 		if(light == lights[i]) {
 			lights[i] = 0;
-			return;
+			return true;
 		}
 	}
+	return false;
 }
 
+bool Scene::remove_object(const Object *obj) {
+	std::list<Object*>::iterator iter = find(obects.begin(), objects.end(), obj);
+	if(iter != objects.end()) {
+		objects.erase(iter);
+		return true;
+	}
+	return false;
+}
+
+bool Scene::remove_particle_sys(const ParticleSystem *p) {
+	std::list<ParticleSystem*>::iterator iter = find(psys.begin(), psys.end(), p);
+	if(iter != psys.end()) {
+		psys.erase(iter);
+		return true;
+	}
+	return false;
+}
 
 Camera *Scene::get_camera(const char *name) {
 	std::list<Camera *>::iterator iter = cameras.begin();
@@ -357,7 +365,13 @@ void Scene::render_cube_map(Object *obj, unsigned long msec) const {
 		clear(bg_color);
 		clear_zbuffer_stencil(1.0, 0);
 		render(msec);
-		dsys::overlay(0, Vector2(0,0), Vector2(1,1), Color(0, 0, 0, 1 - mat->env_intensity));
+
+		Color overlay_color = mat->specular_color * mat->env_intensity;
+		set_alpha_blending(true);
+		set_blend_func(BLEND_ZERO, BLEND_SRC_COLOR);
+		dsys::overlay(0, Vector2(0,0), Vector2(1,1), overlay_color, 0, false);
+		set_alpha_blending(false);
+		
 		set_render_target(0);
 	}
 

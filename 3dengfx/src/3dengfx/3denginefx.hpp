@@ -129,7 +129,7 @@ void set_lighting(bool enable);
 //void set_color_vertex(bool enable);
 void set_ambient_light(const Color &ambient_color);
 void set_shading_mode(ShadeMode mode);
-void set_specular(bool enable);
+//void set_specular(bool enable);
 
 void set_bump_light(const Light *light);
 

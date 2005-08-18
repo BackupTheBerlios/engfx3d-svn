@@ -67,7 +67,7 @@ bool init() {
 	if(!cfg_file || !(gip = load_graphics_context_config(cfg_file))) {
 		cerr << "couldn't " << (cfg_file ? "load" : "locate") << " the config file \"3dengfx.conf\", using defaults\n";
 		
-		static GraphicsInitParameters init;
+		GraphicsInitParameters init;
 		init.x = 800;
 		init.y = 600;
 		init.bpp = 32;

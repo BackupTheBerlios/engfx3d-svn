@@ -49,17 +49,20 @@ RenderParams::RenderParams() {
 	show_normals_scale = 0.5;
 	use_vertex_color = false;
 	taddr = TEXADDR_WRAP;
+	auto_normalize = false;
 }
 	
 
 Object::Object() {
 	bvol_valid = false;
 	bvol = 0;
+	set_dynamic(false);
 }
 
 Object::Object(const TriMesh &mesh) {
 	bvol = 0;
 	set_mesh(mesh);
+	set_dynamic(false);
 }
 
 void Object::set_mesh(const TriMesh &mesh) {
@@ -195,6 +198,10 @@ void Object::set_texture_addressing(TextureAddressing taddr) {
 	render_params.taddr = taddr;
 }
 
+void Object::set_auto_normalize(bool enable) {
+	render_params.auto_normalize = enable;
+}
+
 void Object::apply_xform(unsigned long time) {
 	world_mat = get_prs(time).get_xform_matrix();
 	mesh.apply_xform(world_mat);
@@ -237,9 +244,13 @@ bool Object::render(unsigned long time) {
 	
 	set_matrix(XFORM_WORLD, world_mat);
 	mat.set_glmaterial();
+
+	::set_auto_normalize(render_params.auto_normalize);
 	
 	//render8tex_units();
 	render_hack(time);
+
+	if(render_params.auto_normalize) ::set_auto_normalize(false);
 
 	return true;
 }

@@ -443,7 +443,7 @@ void create_revolution(TriMesh *mesh, const Curve &curve, int udiv, int vdiv) {
  * accepts an array of data points, fits a spline through them and passes the rest
  * to the real create_revolution defined above.
  */
-void create_revolution(TriMesh *mesh, Vector3 *data, int count, int udiv, int vdiv) {
+void create_revolution(TriMesh *mesh, const Vector3 *data, int count, int udiv, int vdiv) {
 	CatmullRomSplineCurve spline;
 	for(int i=0; i<count; i++) {
 		spline.add_control_point(data[i]);

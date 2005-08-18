@@ -38,6 +38,8 @@ namespace dsys {
 
 	void set_demo_script(const char *fname);
 
+	unsigned long get_demo_time();
+
 	void add_part(Part *part);
 	void remove_part(Part *part);
 	void start_part(Part *part);
@@ -47,6 +49,7 @@ namespace dsys {
 	Part *get_running(const char *pname);
 	
 	bool start_demo();
+	bool render_demo(int fps = 25, const char *out_dir = "frames");
 	void end_demo();
 	int update_graphics();
 }

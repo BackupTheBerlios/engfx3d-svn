@@ -37,7 +37,7 @@ static scalar_t global_time;
 static const scalar_t timeslice = 1.0 / 30.0;
 
 // just a trial and error constant to match point-sprite size with billboard size
-#define PSPRITE_BILLBOARD_RATIO		150
+#define PSPRITE_BILLBOARD_RATIO		100
 
 // particle rendering state
 static bool use_psprites = true;
@@ -147,18 +147,28 @@ ParticleSysParams::ParticleSysParams() {
 	billboard_tex = 0;
 	halo = 0;
 	rot = 0.0;
+	glob_rot = 0.0;
 	halo_rot = 0.0;
 	big_particles = false;
+	spawn_offset_curve = 0;
+	spawn_offset_curve_area = Fuzzy(0.5, 1.0);
+
+	src_blend = BLEND_SRC_ALPHA;
+	dest_blend = BLEND_ONE;
 }
 
 
 
 ParticleSystem::ParticleSystem(const char *fname) {
 	SysCaps sys_caps = get_system_capabilities();
-	psprites_unsupported = !sys_caps.point_sprites || !sys_caps.point_params;
+	/* XXX: My Radeon Mobility 9000 supports point sprites but does not say so
+	 * in the extension string, it only has point params there. So I changed this
+	 * condition to && since probably if a card supports one, it will also support
+	 * the other.
+	 */
+	psprites_unsupported = !sys_caps.point_sprites && !sys_caps.point_params;
 
 	prev_update = -1.0;
-	//XXX: test this...;
 	fraction = 0.0;
 	ptype = PTYPE_BILLBOARD;
 
@@ -177,6 +187,10 @@ ParticleSystem::~ParticleSystem() {}
 
 void ParticleSystem::set_params(const ParticleSysParams &psys_params) {
 	this->psys_params = psys_params;
+}
+
+ParticleSysParams *ParticleSystem::get_params() {
+	return &psys_params;
 }
 
 void ParticleSystem::set_particle_type(ParticleType ptype) {
@@ -252,7 +266,13 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 		//PRS sub_prs = get_prs((unsigned long)(t * 1000.0));
 		
 
-		particle->set_position(pos + psys_params.spawn_offset());
+		Vector3 offset = psys_params.spawn_offset();
+		if(psys_params.spawn_offset_curve) {
+			float t = psys_params.spawn_offset_curve_area();
+			offset += (*psys_params.spawn_offset_curve)(t);
+		}
+		// XXX: correct this rotation to span the whole interval
+		particle->set_position(pos + offset.transformed(prs.rotation));
 		particle->set_rotation(prs.rotation);
 		particle->set_scaling(prs.scale);
 
@@ -262,7 +282,7 @@ void ParticleSystem::update(const Vector3 &ext_force) {
 		} else {
 			particle->size_end = psys_params.psize_end;
 		}
-		particle->velocity = psys_params.shoot_dir();
+		particle->velocity = psys_params.shoot_dir().transformed(prs.rotation);	// XXX: correct this rotation to span the interval
 		particle->friction = psys_params.friction;
 		particle->birth_time = t;
 		particle->lifespan = psys_params.lifespan();
@@ -316,7 +336,7 @@ void ParticleSystem::draw() const {
 			set_lighting(false);
 			set_zwrite(false);
 			set_alpha_blending(true);
-			set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE);
+			set_blend_func(psys_params.src_blend, psys_params.dest_blend);
 
 			if(psys_params.billboard_tex) {
 				enable_texture_unit(0);
@@ -576,8 +596,39 @@ bool psys::load_particle_sys_params(const char *fname, ParticleSysParams *psp) {
 			if(!strcmp(opt->str_value, "true")) {
 				psp->big_particles = true;
 			}
+			
+		} else if(!strcmp(opt->option, "blend_src") || !strcmp(opt->option, "blend_dest")) {
+			BlendingFactor factor = (BlendingFactor)0xfbad;
+			if(!strcmp(opt->str_value, "0")) {
+				factor = BLEND_ZERO;
+			} else if(!strcmp(opt->str_value, "1")) {
+				factor = BLEND_ONE;
+			} else if(!strcmp(opt->str_value, "srcc")) {
+				factor = BLEND_SRC_COLOR;
+			} else if(!strcmp(opt->str_value, "srca")) {
+				factor = BLEND_SRC_ALPHA;
+			} else if(!strcmp(opt->str_value, "1-srcc")) {
+				factor = BLEND_ONE_MINUS_SRC_COLOR;
+			} else if(!strcmp(opt->str_value, "1-srca")) {
+				factor = BLEND_ONE_MINUS_SRC_ALPHA;
+			} else if(!strcmp(opt->str_value, "1-dstc")) {
+				factor = BLEND_ONE_MINUS_DST_COLOR;
+			} else {
+				error("psys: invalid blend specification: %s", opt->str_value);
+			}
 
-		}	
+			if(factor != (BlendingFactor)0xfbad) {
+				if(!strcmp(opt->option, "blend_src")) {
+					psp->src_blend = factor;
+				} else {
+					psp->dest_blend = factor;
+				}
+			}
+		} else if(!strcmp(opt->option, "spawn_offset_curve")) {
+			if(!(psp->spawn_offset_curve = load_curve(opt->str_value))) {
+				error("psys: could not load spawn offset curve: %s", opt->str_value);
+			}
+		}
 	}
 
 	psp->shoot_dir = FuzzyVec3(Fuzzy(shoot.x, shoot_range.x), Fuzzy(shoot.y, shoot_range.y), Fuzzy(shoot.z, shoot_range.z));

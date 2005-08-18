@@ -29,6 +29,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _CURVES_HPP_
 #define _CURVES_HPP_
 
+#include "3dengfx_config.h"
+
 #include <string>
 #include "n3dmath2/n3dmath2.hpp"
 #include "common/linkedlist.hpp"
@@ -36,10 +38,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class Curve {
 protected:
-	LinkedList<Vector3> ControlPoints;
-	Vector2 *Samples;	// used for parametrizing by arc length
-	int SampleCount;
-	bool ArcParametrize;
+	LinkedList<Vector3> control_points;
+	Vector2 *samples;	// used for parametrizing by arc length
+	int sample_count;
+	bool arc_parametrize;
 
 	Curve *ease_curve;	// ease in/out curve (1D, x&z discarded)
 	int ease_sample_count, ease_step;
@@ -54,7 +56,10 @@ public:
 	Curve();
 	virtual ~Curve();
 	virtual void add_control_point(const Vector3 &cp);
+	virtual void remove_control_point(int index);
+	virtual Vector3 *get_control_point(int index);
 
+	virtual int get_point_count() const;
 	virtual int get_segment_count() const = 0;
 	virtual void set_arc_parametrization(bool state);
 	virtual void set_ease_curve(Curve *curve);
@@ -62,6 +67,8 @@ public:
 
 	virtual Vector3 interpolate(scalar_t t) const = 0;
 	virtual Vector3 operator ()(scalar_t t) const;
+
+	friend bool save_curve(const char *fname, const Curve *curve);
 };
 
 class BSplineCurve : public Curve {
@@ -84,5 +91,8 @@ public:
 	Vector3 get_control_point(int i) const;
 	Vector3 get_tangent(scalar_t t);
 };
+
+bool save_curve(const char *fname, const Curve *curve);
+Curve *load_curve(const char *fname);
 
 #endif	// _CURVES_HPP_

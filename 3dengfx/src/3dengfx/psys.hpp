@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* Particle system
  *
  * Author: John Tsiombikas 2004
+ * Modified: John Tsiombikas 2005
  */
 
 #ifndef _PSYS_HPP_
@@ -109,11 +110,15 @@ struct ParticleSysParams {
 	FuzzyVec3 shoot_dir;	// shoot direction (initial particle velocity)
 	scalar_t friction;		// friction of the environment
 	FuzzyVec3 spawn_offset;	// where to spawn in relation to position
+	Curve *spawn_offset_curve;	// a spawn curve in space, relative to position, offset still counts
+	Fuzzy spawn_offset_curve_area;
 	Texture *billboard_tex;	// texture used for billboards
 	Color start_color;		// start color
 	Color end_color;		// end color
 	scalar_t rot;			// particle rotation (radians / second counting from birth)
 	scalar_t glob_rot;		// particle emmiter rotation, particles inherit this
+
+	BlendingFactor src_blend, dest_blend;
 	
 	Texture *halo;			// halo texture
 	Color halo_color;		// halo color
@@ -156,6 +161,7 @@ public:
 	virtual ~ParticleSystem();
 
 	virtual void set_params(const ParticleSysParams &psys_params);
+	virtual ParticleSysParams *get_params();
 	virtual void set_particle_type(ParticleType ptype);
 
 	virtual void update(const Vector3 &ext_force = Vector3());

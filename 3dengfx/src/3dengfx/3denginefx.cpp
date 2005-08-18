@@ -315,7 +315,7 @@ SysCaps get_system_capabilities() {
 	info("Point parameters: %s", sys_caps.point_params ? "yes" : "no");
 	info("Texture units: %d", sys_caps.max_texture_units);
 
-	if(!sys_caps.point_sprites || !sys_caps.point_params) {
+	if(!sys_caps.point_sprites && !sys_caps.point_params) {
 		warning("no point sprites support, falling back to billboards which *may* degrade particle system performance");
 	}
 

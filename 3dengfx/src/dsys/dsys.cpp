@@ -32,6 +32,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "common/bstree.hpp"
 #include "common/err_msg.h"
 
+#if defined(__unix__) || defined(unix)
+#include <sys/stat.h>
+#endif	// unix
+
 using namespace dsys;
 using std::cerr;
 
@@ -49,6 +53,8 @@ static char script_fname[256];
 static DemoScript *ds;
 
 static bool demo_running = false;
+static bool seq_render = false;
+static unsigned long seq_time, seq_dt;
 
 static int best_tex_size(int n) {
 	int i;
@@ -86,6 +92,11 @@ void dsys::clean_up() {
 
 void dsys::set_demo_script(const char *fname) {
 	strcpy(script_fname, fname);
+}
+
+
+unsigned long dsys::get_demo_time() {
+	return seq_render ? seq_time : timer_getmsec(&timer);
 }
 
 
@@ -137,7 +148,40 @@ bool dsys::start_demo() {
 	return true;
 }
 
+static char curr_dir[PATH_MAX];
+
+bool dsys::render_demo(int fps, const char *out_dir) {
+	if(!(ds = open_script(script_fname))) {
+		return false;
+	}
+	
+#if defined(__unix__) || defined(unix)
+	// change to the specified directory
+	getcwd(curr_dir, PATH_MAX);
+
+	struct stat sbuf;
+	if(stat(out_dir, &sbuf) == -1) {
+		mkdir(out_dir, 0770);
+	}	
+	
+	chdir(out_dir);
+#endif	// __unix__
+
+	demo_running = true;
+	seq_render = true;
+	seq_time = 0;
+	seq_dt = 1000 / fps;
+
+	return true;
+}
+
 void dsys::end_demo() {
+#if defined(__unix__) || defined(unix)
+	if(seq_render) {
+		chdir(curr_dir);
+	}
+#endif	// unix
+	
 	if(demo_running) {
 		close_script(ds);
 		demo_running = false;
@@ -150,9 +194,11 @@ static void update_node(BSTreeNode<Part*> *node) {
 }
 
 int dsys::update_graphics() {
-	if(!demo_running) return 1;
+	if(!demo_running) {
+		return 1;
+	}
 
-	unsigned long time = timer_getmsec(&timer);
+	unsigned long time = get_demo_time();
 
 	int res;
 	while((res = execute_script(ds, time)) != 1) {
@@ -171,6 +217,11 @@ int dsys::update_graphics() {
 	// apply any post effects
 	apply_image_fx(time);
 
+	if(seq_render) {
+		screen_capture();
+		seq_time += seq_dt;
+	}
+		
 	flip();
 	return 0;
 }
@@ -184,7 +235,7 @@ static int execute_script(DemoScript *ds, unsigned long time) {
 	}
 
 	if(!cmd::command(command.type, command.argv[0], command.argv + 1)) {
-		error("error in demoscript command execution!");;
+		error("error in demoscript command execution!");
 	}
 
 	return demo_running ? 0 : -1;

@@ -1,7 +1,7 @@
 obj :=
 
-#opt := -O3 -ffast-math -march=pentium4
-opt := -g
+opt := -g -O3 -ffast-math -march=pentium4 -mfpmath=sse
+#opt := -g
 inc_flags := -Isrc -Ilibs -I/usr/local/include
 
 CXXFLAGS := $(opt) -ansi -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
