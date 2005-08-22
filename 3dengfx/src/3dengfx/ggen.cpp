@@ -153,24 +153,26 @@ void create_cylinder(TriMesh *mesh, scalar_t rad, scalar_t len, bool caps, int u
 			circle[i].y = -len/2.0;
 			cap1->pos = circle[i];
 			cap1->normal = Vector3(0.0, -1.0, 0.0);
-			cap1->tex[0] = vptr->tex[1] = TexCoord((scalar_t)i / (scalar_t)udiv, 0.0);
+			//cap1->tex[0] = vptr->tex[1] = TexCoord((scalar_t)i / (scalar_t)udiv, 0.0);
+			cap1->tex[0].u = cap1->tex[1].u = (cap1->pos.x / rad) * 0.5 + 0.5;
+			cap1->tex[0].v = cap1->tex[1].v = (cap1->pos.z / rad) * 0.5 + 0.5;
 			
 			*cap2 = *cap1;
 			cap2->pos.y = len/2.0;
 			cap2->normal.y *= -1.0;
-			cap2->tex[0].v = cap2->tex[1].v = 1.0;
+			//cap2->tex[0].v = cap2->tex[1].v = 1.0;
 
 			cap1++;
 			cap2++;
 		}
 
-		*cap1 = Vertex(Vector3(0.0, -len/2.0, 0.0), 0.0, 0.0);
+		*cap1 = Vertex(Vector3(0.0, -len/2.0, 0.0), 0.5, 0.5);
 		cap1->normal = Vector3(0.0, -1.0, 0.0);
 
 		*cap2 = *cap1;
 		cap2->pos.y = len/2.0;
 		cap2->normal.y *= -1.0;
-		cap2->tex[0].v = cap2->tex[1].v = 1.0;
+		//cap2->tex[0].v = cap2->tex[1].v = 1.0;
 	}
 			
 

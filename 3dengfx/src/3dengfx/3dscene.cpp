@@ -147,7 +147,7 @@ bool Scene::remove_light(const Light *light) {
 }
 
 bool Scene::remove_object(const Object *obj) {
-	std::list<Object*>::iterator iter = find(obects.begin(), objects.end(), obj);
+	std::list<Object*>::iterator iter = find(objects.begin(), objects.end(), obj);
 	if(iter != objects.end()) {
 		objects.erase(iter);
 		return true;
@@ -459,7 +459,7 @@ void Scene::render_sequence(unsigned long start, unsigned long end, int fps, con
 		set_lighting(false);
 		set_alpha_blending(true);
 		set_blend_func(BLEND_ONE_MINUS_DST_COLOR, BLEND_ZERO);
-		draw_full_quad(Vector3(0.0, 0.49), Vector3(t, 0.51), Color(1, 1, 1));
+		draw_scr_quad(Vector3(0.0, 0.49), Vector3(t, 0.51), Color(1, 1, 1));
 		set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE_MINUS_SRC_ALPHA);
 		set_alpha_blending(false);
 		set_lighting(true);

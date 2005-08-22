@@ -66,6 +66,7 @@ echo "prefix: $prefix"
 echo "gfxlib: $gfx"
 echo "png support: $png"
 echo "jpeg support: $jpeg"
+echo "freetype support: $ft"
 
 # output config header
 echo 'creating 3dengfx_config.h ...'

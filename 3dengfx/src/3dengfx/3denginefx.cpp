@@ -764,10 +764,12 @@ void draw_point(const Vertex &pt, scalar_t size) {
 }
 
 
-void draw_full_quad(const Vector2 &corner1, const Vector2 &corner2, const Color &color) {
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
+void draw_scr_quad(const Vector2 &corner1, const Vector2 &corner2, const Color &color, bool reset_xform) {
+	if(reset_xform) {
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+	}
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -787,8 +789,11 @@ void draw_full_quad(const Vector2 &corner1, const Vector2 &corner2, const Color 
 	glEnd();
 
 	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+
+	if(reset_xform) {
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+	}
 }
 
 int get_texture_unit_count() {

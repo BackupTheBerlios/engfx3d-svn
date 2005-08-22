@@ -286,6 +286,7 @@ void Object::render_hack(unsigned long time) {
 		set_texture_unit_alpha(tex_unit, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
 		//tex_id = mat.tex[TEXTYPE_DIFFUSE]->tex_id;
 		::set_texture_addressing(tex_unit, render_params.taddr, render_params.taddr);
+		set_matrix(XFORM_TEXTURE, mat.tmat[TEXTYPE_DIFFUSE], 0);
 		tex_unit++;
 	}
 	
@@ -355,7 +356,7 @@ void Object::render_hack(unsigned long time) {
 			(!render_params.handle_blending && render_params.blending)) {
 		set_alpha_blending(false);
 	}
-	if(render_params.zwrite) ::set_zwrite(true);
+	if(!render_params.zwrite) ::set_zwrite(true);
 	if(mat.shading == SHADING_FLAT) set_shading_mode(SHADING_GOURAUD);
 
 
