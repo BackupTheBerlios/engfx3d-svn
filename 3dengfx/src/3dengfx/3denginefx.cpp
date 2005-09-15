@@ -564,6 +564,8 @@ void clear_zbuffer_stencil(scalar_t zval, unsigned char sval) {
 }
 
 void flip() {
+	glFlush();
+	glFinish();
 	fxwt::swap_buffers();
 }
 
