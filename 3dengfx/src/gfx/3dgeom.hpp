@@ -212,6 +212,8 @@ public:
 
 	void operator +=(const TriMesh *m2);
 
+	void sort_triangles(Vector3 point, bool hilo=true);
+	
 	VertexStatistics get_vertex_stats() const;
 };
 

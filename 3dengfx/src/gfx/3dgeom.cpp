@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <cstdlib>
 #include <cfloat>
 #include "3dgeom.hpp"
+#include "common/heapsort.hpp"
 
 #ifdef USING_3DENGFX
 #include "3dengfx/3denginefx.hpp"
@@ -293,8 +294,8 @@ void TriMesh::calculate_edges() {
 	// Triangle loop
 	for (unsigned int i=0; i<tcount; i++)
 	{
-		int a, b, temp;
-		for (int j=0; j<3; j++)
+		unsigned int a, b, temp;
+		for (unsigned int j=0; j<3; j++)
 		{
 			a = tris[i].vertices[j];
 			b = tris[i].vertices[(j + 1) % 3];
@@ -446,6 +447,45 @@ void TriMesh::apply_xform(const Matrix4x4 &xform) {
 
 void TriMesh::operator +=(const TriMesh *m2) {
 	join_tri_mesh(this, this, m2);
+}
+
+/* TriMesh::sort_triangles - (MG)
+ * sorts triangles according to their distance from a
+ * given point (in model space).
+ */
+void TriMesh::sort_triangles(Vector3 point, bool hilo)
+{
+	const Vertex *verts = get_vertex_array()->get_data();
+	unsigned int vcount = get_vertex_array()->get_count();
+	Triangle *tris = get_mod_triangle_array()->get_mod_data();
+	unsigned int tcount = get_triangle_array()->get_count();
+
+	// store square distance for each vertex
+	scalar_t *sq_distances = new scalar_t[vcount];
+
+	for (unsigned int i=0; i<vcount; i++)
+	{
+		sq_distances[i] = (verts[i].pos - point).length_sq();
+	}
+
+	// store sum of sq distances for each triangle
+	scalar_t *tri_distances = new scalar_t[tcount];
+
+	for (unsigned int i=0; i<tcount; i++)
+	{
+		tri_distances[i] = 0;
+		for (unsigned int j=0; j<3; j++)
+		{
+			tri_distances[i] += sq_distances[tris[i].vertices[j]];
+		}
+	}
+
+	// sort
+	sort(tris, tri_distances, tcount, hilo);
+	
+	// cleanup
+	delete [] sq_distances;
+	delete [] tri_distances;
 }
 
 VertexStatistics TriMesh::get_vertex_stats() const {
