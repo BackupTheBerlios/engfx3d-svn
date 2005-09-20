@@ -4,3 +4,6 @@ Original 3dengfx author and maintainer:
 Developers:
 	John Tsiombikas <nuclear@siggraph.org>
 	Mihalis Georgoulopoulos <msamurai@freemail.gr>
+
+Cross-platform compatibility testers:
+	Leonidas Tsampros <ltsampros@upnet.gr> (FreeBSD)

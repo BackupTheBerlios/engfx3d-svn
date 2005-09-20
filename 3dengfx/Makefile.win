@@ -30,7 +30,7 @@ lib3dengfx.a: 3dengfx-config $(obj)
 	$(AR) rcs $@ $(obj)
 	@echo '---- static library created successfully! ----'
 
-include $(obj:.o=.d)
+-include $(obj:.o=.d)
 
 %.d: %.cpp
 	@set -e; rm -f $@; $(CXX) -MM $(CXXFLAGS) $< > $@.$$$$; \

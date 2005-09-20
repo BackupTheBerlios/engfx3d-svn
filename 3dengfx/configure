@@ -93,15 +93,15 @@ echo "#define GFX_LIBRARY $gfx_def" >>$cfg_file
 
 echo '#define SINGLE_PRECISION_MATH' >>$cfg_file
 
-if [ "$png" == "no" ]; then
+if [ "$png" = "no" ]; then
 	echo '#define IMGLIB_NO_PNG' >>$cfg_file
 fi
 
-if [ "$jpeg" == "no" ]; then
+if [ "$jpeg" = "no" ]; then
 	echo '#define IMGLIB_NO_JPEG' >> $cfg_file
 fi
 
-if [ "$ft" == "no" ]; then
+if [ "$ft" = "no" ]; then
 	echo '#define FXWT_NO_FREETYPE' >>$cfg_file
 fi
 
