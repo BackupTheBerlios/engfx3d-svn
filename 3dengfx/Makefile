@@ -1,6 +1,6 @@
 obj :=
 
-#opt := -O1
+#opt := -O3
 opt := -g
 inc_flags := -Isrc -Ilibs -I/usr/local/include
 

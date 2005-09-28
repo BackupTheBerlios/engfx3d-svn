@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * Modified: 
  * 		Mihalis Georgoulopoulos 2004
  * 		John Tsiombikas 2005
+ * 		Mihalis Georgoulopoulos 2005
  */
 
 #include "3dengfx_config.h"
@@ -31,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <cstdlib>
 #include <cfloat>
+#include <algorithm>
 #include "3dgeom.hpp"
 #include "common/heapsort.hpp"
 
@@ -373,17 +375,17 @@ void TriMesh::set_data(const Vertex *vdata, unsigned long vcount, const Triangle
 	get_mod_triangle_array()->set_data(tdata, tcount);	// also invalidates indices and edges
 }
 
-void TriMesh::calculate_normals() {
+void TriMesh::calculate_normals_by_index() {
 	// precalculate which triangles index each vertex
 	std::vector<unsigned int> *tri_indices;
 	tri_indices = new std::vector<unsigned int>[varray.get_count()];
 	
 	for(unsigned int i=0; i<tarray.get_count(); i++) {
-		for(int j=0; j<3; j++) {
+		for(int j=0; j<3; j++) {	
 			tri_indices[tarray.get_data()[i].vertices[j]].push_back(i);
 		}
 	}
-	
+
 	// calculate the triangle normals
 	for(unsigned int i=0; i<tarray.get_count(); i++) {
 		tarray.get_mod_data()[i].calculate_normal(varray.get_data(), false);
@@ -395,13 +397,105 @@ void TriMesh::calculate_normals() {
 		for(unsigned int j=0; j<(unsigned int)tri_indices[i].size(); j++) {
 			normal += tarray.get_data()[tri_indices[i][j]].normal;
 		}
-		normal.normalize();
+		
+		// avoid division with zero
+		if (tri_indices[i].size())
+			normal.normalize();
 		varray.get_mod_data()[i].normal = normal;
 	}
 	
 	delete [] tri_indices;
 }
 
+/* class VertexOrder - (MG)
+ * used by this module only
+ */
+class VertexOrder
+{
+public:
+	Index	order;
+	Vertex	vertex;
+
+	// Constructor
+	VertexOrder()
+	{
+		order = 0;
+		vertex = Vertex();
+	}
+
+	VertexOrder(Index order, const Vertex& vertex)
+	{
+		this->order = order;
+		this->vertex = vertex;
+	}
+};
+
+// fwd declaration
+static void process_vo_array(VertexOrder *array, unsigned int size, unsigned int crit);
+static std::vector<unsigned int> vo_find_constant_parts(VertexOrder *array, unsigned int size, unsigned int crit);
+
+/* TriMesh::calculate_normals() - (MG)
+ */
+void TriMesh::calculate_normals()
+{
+	Index *index_graph = new Index[varray.get_count()];
+	for (unsigned int i=0; i<varray.get_count(); i++)
+	{
+		index_graph[i] = i;
+	}
+		
+	VertexOrder *vo = new VertexOrder[varray.get_count()];
+	for (unsigned int i=0; i<varray.get_count(); i++)
+	{
+		vo[i] = VertexOrder(i, varray.get_data()[i]);
+	}
+
+	// sort by x, then by y , then by z
+	process_vo_array(vo, varray.get_count(), 0);
+
+	// find constant z parts (= identical verts)
+	std::vector<unsigned int> parts;
+	parts = vo_find_constant_parts(vo, varray.get_count(), 2);
+
+	for (unsigned int i=0; i<parts.size(); i += 2)
+	{
+		// find min index of this part
+		Index min_index = vo[parts[i]].order;
+		for (unsigned int j=0; j<parts[i + 1]; j++)
+		{
+			if (min_index > vo[parts[i] + j].order) 
+					min_index = vo[parts[i] + j].order;
+		}
+		
+		// replace index
+		for (unsigned int j=0; j<parts[i + 1]; j++)
+			index_graph[vo[parts[i] + j].order] = min_index;
+	}
+
+	delete [] vo;
+
+	Triangle *ta = new Triangle[tarray.get_count()];
+	for (unsigned int  i=0; i<tarray.get_count(); i++)
+	{
+		for (unsigned int v=0; v<3; v++)
+		{
+			ta[i].vertices[v] = index_graph[tarray.get_data()[i].vertices[v]];
+		}
+	}
+	
+	TriMesh new_mesh;
+	new_mesh.set_data(varray.get_data(), varray.get_count(), ta, tarray.get_count());	
+	new_mesh.calculate_normals_by_index();
+
+	// store normals to original mesh
+	for (unsigned int i=0; i<varray.get_count(); i++)
+	{
+		varray.get_mod_data()[i].normal = new_mesh.get_vertex_array()->get_data()[index_graph[i]].normal;
+	}
+
+	delete [] index_graph;
+	delete [] ta;
+}
 
 void TriMesh::normalize_normals() {
 	Vertex *vptr = varray.get_mod_data();
@@ -575,4 +669,102 @@ TriMesh *join_tri_mesh(const TriMesh *m1, const TriMesh *m2) {
 	return mesh;
 }
 
+/* utilities for finding duplicate vertices - (MG)
+ */
+extern const scalar_t xsmall_number;
 
+// Sort criteria for VertexOrder objects
+static bool vo_sort_crit_x(const VertexOrder& a, const VertexOrder& b)
+{
+	return (a.vertex.pos.x < b.vertex.pos.x);
+}
+
+static bool vo_sort_crit_y(const VertexOrder& a, const VertexOrder& b)
+{
+	return (a.vertex.pos.y < b.vertex.pos.y);
+}
+
+static bool vo_sort_crit_z(const VertexOrder& a, const VertexOrder& b)
+{
+	return (a.vertex.pos.z < b.vertex.pos.z);
+}
+
+// equality criteria for VertexOrder objects
+static bool vo_eq_crit_x(const VertexOrder& a, const VertexOrder& b)
+{
+	scalar_t dif = b.vertex.pos.x - a.vertex.pos.x;
+	if (dif < 0) dif = -dif;
+	return (dif < xsmall_number);
+}
+
+static bool vo_eq_crit_y(const VertexOrder& a, const VertexOrder& b)
+{
+	scalar_t dif = b.vertex.pos.y - a.vertex.pos.y;
+	if (dif < 0) dif = -dif;
+	return (dif < xsmall_number);
+}
+
+static bool vo_eq_crit_z(const VertexOrder& a, const VertexOrder& b)
+{
+	scalar_t dif = b.vertex.pos.z - a.vertex.pos.z;
+	if (dif < 0) dif = -dif;
+	return (dif < xsmall_number);
+}
+
+static bool (* vo_sort_crit[])(const VertexOrder& a, const VertexOrder& b) = {vo_sort_crit_x, vo_sort_crit_y, vo_sort_crit_z};
+
+static bool (* vo_eq_crit[])(const VertexOrder& a, const VertexOrder& b) = {vo_eq_crit_x, vo_eq_crit_y, vo_eq_crit_z};
+
+static std::vector<unsigned int> vo_find_constant_parts(VertexOrder *array, unsigned int size, unsigned int crit)
+{
+	std::vector<unsigned int> parts;
+	if (crit > 2) return parts;
+
+	bool (* eq_crit)(const VertexOrder& a, const VertexOrder& b);
+	eq_crit = vo_eq_crit[crit];
+
+	unsigned int start=0;
+	for (unsigned int i=0; i<size; i++)
+	{
+		if (!eq_crit(array[start], array[i]))
+		{
+			if (i - start > 1)
+			{
+				parts.push_back(start);
+				parts.push_back(i - start);
+			}
+
+			start = i;
+		}
+	}
+
+	if (size - start > 1)
+	{
+		parts.push_back(start);
+		parts.push_back(size - start);
+	}
+
+	return parts;
+}
+
+static void process_vo_array(VertexOrder *array, unsigned int size, unsigned int crit)
+{
+	if (crit > 2) return;
+		
+	bool (* sort_crit)(const VertexOrder& a, const VertexOrder& b);
+	sort_crit = vo_sort_crit[crit];
+
+	// sort array
+	std::sort(array, array + size, sort_crit);
+
+	if (crit > 1) return;
+	
+	// find constant parts
+	std::vector<unsigned int> parts;
+	parts = vo_find_constant_parts(array, size, crit);
+
+	for (unsigned int i=0; i<parts.size(); i += 2)
+	{
+		process_vo_array(array + parts[i], parts[i + 1], crit + 1);
+	}
+}

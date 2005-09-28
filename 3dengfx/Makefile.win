@@ -1,11 +1,11 @@
 obj :=
 
-#CC := i586-mingw32msvc-gcc
-#CXX := i586-mingw32msvc-g++
-#AR := i586-mingw32msvc-ar
+CC := i586-mingw32msvc-gcc
+CXX := i586-mingw32msvc-g++
+AR := i586-mingw32msvc-ar
 
-#opt := -O3 -ffast-math -march=pentium4
-opt := -g
+opt := -O3 -ffast-math -march=pentium4
+#opt := -g
 inc_flags := -Isrc -Ilibs -I/usr/local/include
 
 CXXFLAGS := $(opt) -ansi -pedantic -Wall $(inc_flags)

@@ -204,6 +204,7 @@ public:
 	
 	void set_data(const Vertex *vdata, unsigned long vcount, const Triangle *tdata, unsigned long tcount);	
 
+	void calculate_normals_by_index();
 	void calculate_normals();
 	void normalize_normals();
 	void invert_winding();
