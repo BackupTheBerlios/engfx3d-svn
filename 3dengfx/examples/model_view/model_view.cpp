@@ -19,7 +19,7 @@ Object *obj;
 bool show_controls;
 
 const char *title_str = "3dengfx model viewer";
-const char *data_dir, *model_file, *model_name;
+const char *data_dir=0, *model_file=0, *model_name=0;
 
 const char *help_str = " [options] <model file name>\n\n"
 	"-m <name>, --model <name>\n"
@@ -101,6 +101,7 @@ bool init() {
 	cam_light->set_intensity(0.85);
 	scene->add_light(cam_light);
 
+	
 
 	// load the mesh
 	TriMesh *mesh = load_mesh(model_file, model_name);
