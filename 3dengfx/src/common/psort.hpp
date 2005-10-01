@@ -40,7 +40,7 @@ template <class T> int greater(const T* a, const T* b)
 	return !(*a < *b);
 }
 
-template <class T, class P> void sort(T *elements, P *priorities, int n, bool hilo)
+template <class T, class P> void sort(T *elements, P *priorities, unsigned int n, bool hilo)
 {
 	int (*criterion)(const P*, const P*);
 

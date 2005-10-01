@@ -379,7 +379,7 @@ void TriMesh::calculate_normals_by_index() {
 	// precalculate which triangles index each vertex
 	std::vector<unsigned int> *tri_indices;
 	tri_indices = new std::vector<unsigned int>[varray.get_count()];
-	
+
 	for(unsigned int i=0; i<tarray.get_count(); i++) {
 		for(int j=0; j<3; j++) {	
 			tri_indices[tarray.get_data()[i].vertices[j]].push_back(i);
@@ -431,8 +431,7 @@ public:
 };
 
 // fwd declaration
-static void process_vo_array(VertexOrder *array, unsigned int size, unsigned int crit);
-static std::vector<unsigned int> vo_find_constant_parts(VertexOrder *array, unsigned int size, unsigned int crit);
+static std::vector<unsigned int> process_vo_array(VertexOrder *array, unsigned int size, unsigned int crit);
 
 /* TriMesh::calculate_normals() - (MG)
  */
@@ -450,13 +449,10 @@ void TriMesh::calculate_normals()
 		vo[i] = VertexOrder(i, varray.get_data()[i]);
 	}
 
-	// sort by x, then by y , then by z
-	process_vo_array(vo, varray.get_count(), 0);
-
-	// find constant z parts (= identical verts)
+	// sort by x, then by y , then by z, and return constant-z parts
 	std::vector<unsigned int> parts;
-	parts = vo_find_constant_parts(vo, varray.get_count(), 2);
-
+	parts = process_vo_array(vo, varray.get_count(), 0);
+	
 	for (unsigned int i=0; i<parts.size(); i += 2)
 	{
 		// find min index of this part
@@ -472,6 +468,20 @@ void TriMesh::calculate_normals()
 			index_graph[vo[parts[i] + j].order] = min_index;
 	}
 
+	/*
+	// DEBUG
+	printf("Vertex:\t\t\tOldIndex:\tNewIndex:\t\n");
+	printf("-------\t\t\t---------\t---------\t\n");
+	for (unsigned int i=0; i<varray.get_count(); i++)
+	{
+		printf("<%f,%f,%f>\t\t%d\t%d\n", 
+			vo[i].vertex.pos.x, 
+			vo[i].vertex.pos.y, 
+			vo[i].vertex.pos.z,
+			vo[i].order,
+			index_graph[vo[i].order]);
+	}*/
+
 	delete [] vo;
 
 	Triangle *ta = new Triangle[tarray.get_count()];
@@ -482,7 +492,7 @@ void TriMesh::calculate_normals()
 			ta[i].vertices[v] = index_graph[tarray.get_data()[i].vertices[v]];
 		}
 	}
-	
+
 	TriMesh new_mesh;
 	new_mesh.set_data(varray.get_data(), varray.get_count(), ta, tarray.get_count());	
 	new_mesh.calculate_normals_by_index();
@@ -692,23 +702,17 @@ static bool vo_sort_crit_z(const VertexOrder& a, const VertexOrder& b)
 // equality criteria for VertexOrder objects
 static bool vo_eq_crit_x(const VertexOrder& a, const VertexOrder& b)
 {
-	scalar_t dif = b.vertex.pos.x - a.vertex.pos.x;
-	if (dif < 0) dif = -dif;
-	return (dif < xsmall_number);
+	return (b.vertex.pos.x - a.vertex.pos.x < xsmall_number);
 }
 
 static bool vo_eq_crit_y(const VertexOrder& a, const VertexOrder& b)
 {
-	scalar_t dif = b.vertex.pos.y - a.vertex.pos.y;
-	if (dif < 0) dif = -dif;
-	return (dif < xsmall_number);
+	return (b.vertex.pos.y - a.vertex.pos.y < xsmall_number);
 }
 
 static bool vo_eq_crit_z(const VertexOrder& a, const VertexOrder& b)
 {
-	scalar_t dif = b.vertex.pos.z - a.vertex.pos.z;
-	if (dif < 0) dif = -dif;
-	return (dif < xsmall_number);
+	return (b.vertex.pos.z - a.vertex.pos.z < xsmall_number);
 }
 
 static bool (* vo_sort_crit[])(const VertexOrder& a, const VertexOrder& b) = {vo_sort_crit_x, vo_sort_crit_y, vo_sort_crit_z};
@@ -747,9 +751,10 @@ static std::vector<unsigned int> vo_find_constant_parts(VertexOrder *array, unsi
 	return parts;
 }
 
-static void process_vo_array(VertexOrder *array, unsigned int size, unsigned int crit)
+static std::vector<unsigned int> process_vo_array(VertexOrder *array, unsigned int size, unsigned int crit)
 {
-	if (crit > 2) return;
+	std::vector<unsigned int> r_parts;
+	if (crit > 2) return r_parts;
 		
 	bool (* sort_crit)(const VertexOrder& a, const VertexOrder& b);
 	sort_crit = vo_sort_crit[crit];
@@ -757,14 +762,27 @@ static void process_vo_array(VertexOrder *array, unsigned int size, unsigned int
 	// sort array
 	std::sort(array, array + size, sort_crit);
 
-	if (crit > 1) return;
-	
 	// find constant parts
 	std::vector<unsigned int> parts;
 	parts = vo_find_constant_parts(array, size, crit);
-
-	for (unsigned int i=0; i<parts.size(); i += 2)
+	
+	if (crit < 2)
 	{
-		process_vo_array(array + parts[i], parts[i + 1], crit + 1);
+		for (unsigned int i=0; i<parts.size(); i += 2)
+		{
+			std::vector<unsigned int> new_parts;
+			new_parts = process_vo_array(array + parts[i], parts[i + 1], crit + 1);
+			for (unsigned int j=0; j<new_parts.size(); j+=2)
+			{
+				r_parts.push_back(new_parts[j] + parts[i]);
+				r_parts.push_back(new_parts[j+1]);
+			}
+		}
+		return r_parts;
+	}
+	else
+	{
+		// found constant z parts. just return them
+		return parts;
 	}
 }
