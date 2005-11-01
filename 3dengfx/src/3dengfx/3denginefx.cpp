@@ -1154,6 +1154,13 @@ void set_viewport(unsigned int x, unsigned int y, unsigned int xsize, unsigned i
 	glViewport(x, y, xsize, ysize);
 }
 
+// normalized set_viewport()
+void set_viewport_norm(float x, float y, float xsize, float ysize)
+{
+	glViewport((int) (x * gparams.x), (int)(y * gparams.y), 
+		(int) (xsize * gparams.x), int (ysize * gparams.y));
+}
+
 Matrix4x4 create_projection_matrix(scalar_t vfov, scalar_t aspect, scalar_t near_clip, scalar_t far_clip) {
 	
 	scalar_t hfov = vfov * aspect;

@@ -136,7 +136,11 @@ void set_bump_light(const Light *light);
 // Transformation Matrices
 void set_matrix(TransformType xform_type, const Matrix4x4 &mat, int num = 0);
 Matrix4x4 get_matrix(TransformType xform_type, int num = 0);
+
+// viewport
 void set_viewport(unsigned int x, unsigned int y, unsigned int xsize, unsigned int ysize);
+// normalized set_viewport()
+void set_viewport_norm(float x, float y, float xsize, float ysize);
 
 Matrix4x4 create_projection_matrix(scalar_t vfov, scalar_t aspect, scalar_t near, scalar_t far);
 
