@@ -102,6 +102,7 @@ namespace glext {
 	// - uniforms
 	extern PFNGLGETUNIFORMLOCATIONARBPROC glGetUniformLocation;
 	extern PFNGLGETACTIVEUNIFORMARBPROC glGetActiveUniform;
+	extern PFNGLUNIFORM1IARBPROC glUniform1i;
 	extern PFNGLUNIFORM1FARBPROC glUniform1f;
 	extern PFNGLUNIFORM2FARBPROC glUniform2f;
 	extern PFNGLUNIFORM3FARBPROC glUniform3f;

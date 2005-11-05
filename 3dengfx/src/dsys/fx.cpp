@@ -141,8 +141,8 @@ void dsys::overlay(Texture *tex, const Vector2 &corner1, const Vector2 &corner2,
 		set_texture_unit_color(0, TOP_REPLACE, TARG_TEXTURE, TARG_COLOR);
 		set_texture_unit_alpha(0, TOP_MODULATE, TARG_TEXTURE, TARG_COLOR);
 		set_texture_coord_index(0, 0);
-		set_texture_addressing(0, TEXADDR_CLAMP, TEXADDR_CLAMP);
 		set_texture(0, tex);
+		set_texture_addressing(0, TEXADDR_CLAMP, TEXADDR_CLAMP);
 	}
 
 	if(pprog) {

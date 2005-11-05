@@ -171,6 +171,7 @@ struct VertexStatistics {
 	scalar_t min_dist;
 	scalar_t max_dist;
 	scalar_t avg_dist;
+	scalar_t xmin, xmax, ymin, ymax, zmin, zmax;
 };
 
 class TriMesh {

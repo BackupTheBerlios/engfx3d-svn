@@ -106,6 +106,7 @@ namespace glext {
 	// - uniforms
 	PFNGLGETUNIFORMLOCATIONARBPROC glGetUniformLocation;
 	PFNGLGETACTIVEUNIFORMARBPROC glGetActiveUniform;
+	PFNGLUNIFORM1IARBPROC glUniform1i;
 	PFNGLUNIFORM1FARBPROC glUniform1f;
 	PFNGLUNIFORM2FARBPROC glUniform2f;
 	PFNGLUNIFORM3FARBPROC glUniform3f;
@@ -470,6 +471,7 @@ bool start_gl() {
 		
 		glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONARBPROC)glGetProcAddress("glGetUniformLocationARB");
 		glGetActiveUniform = (PFNGLGETACTIVEUNIFORMARBPROC)glGetProcAddress("glGetActiveUniformARB");
+		glUniform1i = (PFNGLUNIFORM1IARBPROC)glGetProcAddress("glUniform1iARB");
 		glUniform1f = (PFNGLUNIFORM1FARBPROC)glGetProcAddress("glUniform1fARB");
 		glUniform2f = (PFNGLUNIFORM2FARBPROC)glGetProcAddress("glUniform2fARB");
 		glUniform3f = (PFNGLUNIFORM3FARBPROC)glGetProcAddress("glUniform3fARB");
@@ -1162,19 +1164,29 @@ void set_viewport_norm(float x, float y, float xsize, float ysize)
 }
 
 Matrix4x4 create_projection_matrix(scalar_t vfov, scalar_t aspect, scalar_t near_clip, scalar_t far_clip) {
-	
+#ifdef COORD_LHS
 	scalar_t hfov = vfov * aspect;
 	scalar_t w = 1.0f / (scalar_t)tan(hfov * 0.5f);
 	scalar_t h = 1.0f / (scalar_t)tan(vfov * 0.5f);
 	scalar_t q = far_clip / (far_clip - near_clip);
 	
 	Matrix4x4 mat;
-	//mat.set_scaling(Vector4(w, h, q, 0));
 	mat[0][0] = w;
 	mat[1][1] = h;
 	mat[2][2] = q;
 	mat[3][2] = 1.0f;
 	mat[2][3] = -q * near_clip;
+#else
+	scalar_t f = 1.0f / (scalar_t)tan(vfov * 0.5f);
+
+	Matrix4x4 mat;
+	mat[0][0] = f / aspect;
+	mat[1][1] = f;
+	mat[2][2] = (far_clip + near_clip) / (near_clip - far_clip);
+	mat[3][2] = -1.0f;
+	mat[2][3] = (2.0f * far_clip * near_clip) / (near_clip - far_clip);
+	mat[3][3] = 0;
+#endif
 	
 	return mat;
 }

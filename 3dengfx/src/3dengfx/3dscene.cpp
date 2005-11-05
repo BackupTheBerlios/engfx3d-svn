@@ -90,7 +90,6 @@ Scene::~Scene() {
 			delete *piter++;
 		}
 	}
-
 }
 
 void Scene::set_poly_count(unsigned long pcount) {

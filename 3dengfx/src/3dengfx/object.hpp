@@ -54,6 +54,19 @@ struct RenderParams {
 	RenderParams();
 };
 
+enum {
+	RMODE_COLOR			= 1,		// unused
+	RMODE_LIGHTING		= 2,		// unused
+	RMODE_TEXTURES		= 4,
+	RMODE_BLENDING		= 8,
+	RMODE_SHADERS		= 16,
+	RMODE_ALL			= 0xffff
+};
+
+// this bitfield determines which aspects of rendering will actually take place
+// it overrides all render parameters.
+extern unsigned long master_render_mode;
+
 class Object : public XFormNode {
 private:
 	TriMesh mesh;

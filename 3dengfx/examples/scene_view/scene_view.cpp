@@ -15,6 +15,8 @@ void clean_up();
 void update_gfx();
 bool assign_shaders();
 
+GraphicsInitParameters *gip;
+
 Scene *scene;
 Camera *cam;
 std::list<Camera*> *cam_list;
@@ -101,7 +103,6 @@ int main(int argc, char **argv) {
 bool init() {
 	const char *cfg_file = loc_get_path("3dengfx.conf", LOC_FILE_CONFIG);
 	
-	GraphicsInitParameters *gip;
 	if(!cfg_file || !(gip = load_graphics_context_config(cfg_file))) {
 		warning("couldn't %s the config file \"3dengfx.conf\", using defaults\n", cfg_file ? "load" : "locate");
 		

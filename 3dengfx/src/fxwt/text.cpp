@@ -402,7 +402,11 @@ Texture *fxwt::get_text(const char *text_str) {
 }
 
 void fxwt::print_text(const char *text_str, const Vector2 &pos, scalar_t size, const Color &col) {
-	error(FT_NOT_COMPILED);
+	static bool first = true;
+	if(first) {
+		error(FT_NOT_COMPILED);
+		first = false;
+	}
 }
 
 #endif	// FXWT_NO_FREETYPE

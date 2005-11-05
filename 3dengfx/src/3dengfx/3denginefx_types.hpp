@@ -34,7 +34,11 @@ enum ShadeMode {
 	SHADING_GOURAUD = GL_SMOOTH
 };
 
+#ifdef COORD_LHS
 enum FaceOrder {ORDER_CW = GL_CW, ORDER_CCW = GL_CCW};
+#else
+enum FaceOrder {ORDER_CW = GL_CCW, ORDER_CCW = GL_CW};
+#endif
 
 enum PrimitiveType {
 	TRIANGLE_LIST	= GL_TRIANGLES,

@@ -86,40 +86,65 @@ void GfxProg::link() {
 	this->linked = (bool)linked;
 }
 
-void GfxProg::set_parameter(const char *pname, scalar_t val) {
+bool GfxProg::is_linked() const {
+	return linked;
+}
+
+unsigned int GfxProg::get_id() const {
+	if(!linked) {
+		const_cast<GfxProg*>(this)->link();
+	}
+	return prog;
+}
+
+bool GfxProg::set_parameter(const char *pname, int val) {
+	glUseProgramObject(prog);
+	int loc = glGetUniformLocation(prog, pname);
+	if(loc != -1) {
+		glUniform1i(loc, val);
+	}
+	glUseProgramObject(0);
+	return loc == -1 ? false : true;
+}
+
+bool GfxProg::set_parameter(const char *pname, scalar_t val) {
 	glUseProgramObject(prog);
 	int loc = glGetUniformLocation(prog, pname);
 	if(loc != -1) {
 		glUniform1f(loc, val);
 	}
 	glUseProgramObject(0);
+	return loc == -1 ? false : true;
 }
 
-void GfxProg::set_parameter(const char *pname, const Vector3 &val) {
+bool GfxProg::set_parameter(const char *pname, const Vector3 &val) {
 	glUseProgramObject(prog);
 	int loc = glGetUniformLocation(prog, pname);
 	if(loc != -1) {
 		glUniform3f(loc, val.x, val.y, val.z);
 	}
 	glUseProgramObject(0);
+	return loc == -1 ? false : true;
 }
 
-void GfxProg::set_parameter(const char *pname, const Vector4 &val) {
+bool GfxProg::set_parameter(const char *pname, const Vector4 &val) {
 	glUseProgramObject(prog);
 	int loc = glGetUniformLocation(prog, pname);
 	if(loc != -1) {
 		glUniform4f(loc, val.x, val.y, val.z, val.w);
 	}
 	glUseProgramObject(0);
+	return loc == -1 ? false : true;
 }
 
-void GfxProg::set_parameter(const char *pname, const Matrix4x4 &val) {
+bool GfxProg::set_parameter(const char *pname, const Matrix4x4 &val) {
 	glUseProgramObject(prog);
 	int loc = glGetUniformLocation(prog, pname);
 	if(loc != -1) {
 		glUniformMatrix4fv(loc, 1, 1, val.opengl_matrix());
 	}
 	glUseProgramObject(0);
+	return loc == -1 ? false : true;
 }
 
 void GfxProg::set_update_handler(void (*func)(GfxProg*)) {

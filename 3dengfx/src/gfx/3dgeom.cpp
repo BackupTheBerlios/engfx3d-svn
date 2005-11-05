@@ -22,9 +22,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: John Tsiombikas 2004
  * Modified: 
- * 		Mihalis Georgoulopoulos 2004
+ * 		Mihalis Georgoulopoulos 2004, 2005
  * 		John Tsiombikas 2005
- * 		Mihalis Georgoulopoulos 2005
  */
 
 #include "3dengfx_config.h"
@@ -459,8 +458,9 @@ void TriMesh::calculate_normals()
 		Index min_index = vo[parts[i]].order;
 		for (unsigned int j=0; j<parts[i + 1]; j++)
 		{
-			if (min_index > vo[parts[i] + j].order) 
-					min_index = vo[parts[i] + j].order;
+			if(min_index > vo[parts[i] + j].order) {
+				min_index = vo[parts[i] + j].order;
+			}
 		}
 		
 		// replace index
@@ -494,7 +494,7 @@ void TriMesh::calculate_normals()
 	}
 
 	TriMesh new_mesh;
-	new_mesh.set_data(varray.get_data(), varray.get_count(), ta, tarray.get_count());	
+	new_mesh.set_data(varray.get_data(), varray.get_count(), ta, tarray.get_count());
 	new_mesh.calculate_normals_by_index();
 
 	// store normals to original mesh
@@ -594,13 +594,24 @@ void TriMesh::sort_triangles(Vector3 point, bool hilo)
 
 VertexStatistics TriMesh::get_vertex_stats() const {
 	if(!vertex_stats_valid) {
+		vstats.xmin = vstats.ymin = vstats.zmin = FLT_MAX;
+		vstats.xmax = vstats.ymax = vstats.zmax = -FLT_MAX;
+		
 		const Vertex *varray = get_vertex_array()->get_data();
 		int count = get_vertex_array()->get_count();
 
 		const Vertex *vptr = varray;
 		vstats.centroid = Vector3(0, 0, 0);
 		for(int i=0; i<count; i++) {
-			vstats.centroid += (vptr++)->pos;
+			Vector3 pos = (vptr++)->pos;
+			vstats.centroid += pos;
+
+			if(pos.x < vstats.xmin) vstats.xmin = pos.x;
+			if(pos.y < vstats.ymin) vstats.ymin = pos.y;
+			if(pos.z < vstats.zmin) vstats.zmin = pos.z;
+			if(pos.x > vstats.xmax) vstats.xmax = pos.x;
+			if(pos.y > vstats.ymax) vstats.ymax = pos.y;
+			if(pos.z > vstats.zmax) vstats.zmax = pos.z;
 		}
 		vstats.centroid /= count;
 

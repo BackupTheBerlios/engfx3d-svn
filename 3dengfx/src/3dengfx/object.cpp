@@ -51,6 +51,9 @@ RenderParams::RenderParams() {
 	taddr = TEXADDR_WRAP;
 	auto_normalize = false;
 }
+
+
+unsigned long master_render_mode = RMODE_ALL;
 	
 
 Object::Object() {
@@ -259,89 +262,107 @@ void Object::render_hack(unsigned long time) {
 	//::set_material(mat);
 	int tex_unit = 0;
 
-	if(mat.tex[TEXTYPE_BUMPMAP]) {
-		setup_bump_light(time);	// sets the light vector into texcoord[1]
+	if(master_render_mode & RMODE_TEXTURES) {
+		if(mat.tex[TEXTYPE_BUMPMAP]) {
+			setup_bump_light(time);	// sets the light vector into texcoord[1]
 
-		set_texture(tex_unit, mat.tex[TEXTYPE_BUMPMAP]);
-		enable_texture_unit(tex_unit);
-		set_texture_coord_index(tex_unit, 0);
-		set_texture_unit_color(tex_unit, TOP_REPLACE, TARG_TEXTURE, TARG_TEXTURE);
-		set_texture_unit_alpha(tex_unit, TOP_REPLACE, TARG_PREV, TARG_PREV);
-		tex_unit++;
+			set_texture(tex_unit, mat.tex[TEXTYPE_BUMPMAP]);
+			enable_texture_unit(tex_unit);
+			set_texture_coord_index(tex_unit, 0);
+			set_texture_unit_color(tex_unit, TOP_REPLACE, TARG_TEXTURE, TARG_TEXTURE);
+			set_texture_unit_alpha(tex_unit, TOP_REPLACE, TARG_PREV, TARG_PREV);
+			tex_unit++;
 		
-		select_texture_unit(tex_unit);
-		set_texture(tex_unit, get_normal_cube());
-		enable_texture_unit(tex_unit);
-		set_texture_coord_index(tex_unit, 1);	// tex coord with the light vector (UVW)
-		set_texture_unit_color(tex_unit, TOP_DOT3, TARG_TEXTURE, TARG_PREV);
-		set_texture_unit_alpha(tex_unit, TOP_REPLACE, TARG_PREV, TARG_PREV);
-		tex_unit++;
-	}
-	
-	if(mat.tex[TEXTYPE_DIFFUSE]) {
-		set_texture(tex_unit, mat.tex[TEXTYPE_DIFFUSE]);
-		enable_texture_unit(tex_unit);
-		set_texture_coord_index(tex_unit, 0);
-		set_texture_unit_color(tex_unit, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
-		set_texture_unit_alpha(tex_unit, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
-		//tex_id = mat.tex[TEXTYPE_DIFFUSE]->tex_id;
-		::set_texture_addressing(tex_unit, render_params.taddr, render_params.taddr);
-		set_matrix(XFORM_TEXTURE, mat.tmat[TEXTYPE_DIFFUSE], 0);
-		tex_unit++;
-	}
-	
-	if(mat.tex[TEXTYPE_ENVMAP]) {
-		set_texture(tex_unit, mat.tex[TEXTYPE_ENVMAP]);
-		enable_texture_unit(tex_unit);
-		set_texture_unit_color(tex_unit, TOP_ADD, TARG_TEXTURE, TARG_PREV);
-		set_texture_unit_alpha(tex_unit, TOP_REPLACE, TARG_PREV, TARG_TEXTURE);
-
-		if(mat.tex[TEXTYPE_ENVMAP]->get_type() == TEX_CUBE) {
-			glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
-			glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
-			glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
-			glEnable(GL_TEXTURE_GEN_S);
-			glEnable(GL_TEXTURE_GEN_T);
-			glEnable(GL_TEXTURE_GEN_R);
-
-			Matrix4x4 inv_view = engfx_state::view_matrix;
-			inv_view[0][3] = inv_view[1][3] = inv_view[2][3] = 0.0;
-			inv_view.transpose();
-
-			set_matrix(XFORM_TEXTURE, inv_view, tex_unit);
-
-			::set_texture_addressing(tex_unit, TEXADDR_CLAMP, TEXADDR_CLAMP);
-		} else {
-			glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
-			glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
-			glEnable(GL_TEXTURE_GEN_S);
-			glEnable(GL_TEXTURE_GEN_T);
-
-			// TODO: fix this to produce the correct orientation
-			/*glMatrixMode(GL_TEXTURE);
-			glLoadIdentity();
-			glRotatef(180.0, 0.0, 1.0, 0.0);*/
+			select_texture_unit(tex_unit);
+			set_texture(tex_unit, get_normal_cube());
+			enable_texture_unit(tex_unit);
+			set_texture_coord_index(tex_unit, 1);	// tex coord with the light vector (UVW)
+			set_texture_unit_color(tex_unit, TOP_DOT3, TARG_TEXTURE, TARG_PREV);
+			set_texture_unit_alpha(tex_unit, TOP_REPLACE, TARG_PREV, TARG_PREV);
+			tex_unit++;
 		}
-		//tex_id = mat.tex[TEXTYPE_ENVMAP]->tex_id;
-		tex_unit++;
+	
+		if(mat.tex[TEXTYPE_DIFFUSE]) {
+			set_texture(tex_unit, mat.tex[TEXTYPE_DIFFUSE]);
+			enable_texture_unit(tex_unit);
+			set_texture_coord_index(tex_unit, 0);
+			set_texture_unit_color(tex_unit, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
+			set_texture_unit_alpha(tex_unit, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
+			//tex_id = mat.tex[TEXTYPE_DIFFUSE]->tex_id;
+			::set_texture_addressing(tex_unit, render_params.taddr, render_params.taddr);
+			set_matrix(XFORM_TEXTURE, mat.tmat[TEXTYPE_DIFFUSE], 0);
+			tex_unit++;
+		}
+
+		if(mat.tex[TEXTYPE_DETAIL]) {
+			set_texture(tex_unit, mat.tex[TEXTYPE_DETAIL]);
+			enable_texture_unit(tex_unit);
+			set_texture_coord_index(tex_unit, 1);
+			set_texture_unit_color(tex_unit, TOP_ADD, TARG_TEXTURE, TARG_PREV);
+			set_texture_unit_color(tex_unit, TOP_MODULATE, TARG_PREV, TARG_TEXTURE);
+			::set_texture_addressing(tex_unit, render_params.taddr, render_params.taddr);
+			set_matrix(XFORM_TEXTURE, mat.tmat[TEXTYPE_DIFFUSE], 1);
+			tex_unit++;
+		}
+	
+		if(mat.tex[TEXTYPE_ENVMAP]) {
+			set_texture(tex_unit, mat.tex[TEXTYPE_ENVMAP]);
+			enable_texture_unit(tex_unit);
+			set_texture_unit_color(tex_unit, TOP_ADD, TARG_TEXTURE, TARG_PREV);
+			set_texture_unit_alpha(tex_unit, TOP_REPLACE, TARG_PREV, TARG_TEXTURE);
+
+			if(mat.tex[TEXTYPE_ENVMAP]->get_type() == TEX_CUBE) {
+				glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+				glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+				glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+				glEnable(GL_TEXTURE_GEN_S);
+				glEnable(GL_TEXTURE_GEN_T);
+				glEnable(GL_TEXTURE_GEN_R);
+
+				Matrix4x4 inv_view = engfx_state::view_matrix;
+				inv_view[0][3] = inv_view[1][3] = inv_view[2][3] = 0.0;
+				inv_view.transpose();
+
+				set_matrix(XFORM_TEXTURE, inv_view, tex_unit);
+
+				::set_texture_addressing(tex_unit, TEXADDR_CLAMP, TEXADDR_CLAMP);
+			} else {
+				glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+				glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+				glEnable(GL_TEXTURE_GEN_S);
+				glEnable(GL_TEXTURE_GEN_T);
+
+				// TODO: fix this to produce the correct orientation
+				/*glMatrixMode(GL_TEXTURE);
+				glLoadIdentity();
+				glRotatef(180.0, 0.0, 1.0, 0.0);*/
+			}
+			//tex_id = mat.tex[TEXTYPE_ENVMAP]->tex_id;
+			tex_unit++;
+		}
 	}
 
 	::set_zwrite(render_params.zwrite);
 	set_shading_mode(mat.shading);
 
-	if(render_params.handle_blending) {
-		if(mat.alpha < 1.0 - small_number) {
-			set_alpha_blending(true);
-			set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE_MINUS_SRC_ALPHA);
+	if(master_render_mode & RMODE_BLENDING) {
+		if(render_params.handle_blending) {
+			if(mat.alpha < 1.0 - small_number) {
+				set_alpha_blending(true);
+				set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE_MINUS_SRC_ALPHA);
+			}
+		} else {
+			set_alpha_blending(render_params.blending);
+			set_blend_func(render_params.src_blend, render_params.dest_blend);
 		}
-	} else {
-		set_alpha_blending(render_params.blending);
-		set_blend_func(render_params.src_blend, render_params.dest_blend);
 	}
 
 	if(mat.wireframe) ::set_wireframe(true);
 
-	if(render_params.gfxprog) ::set_gfx_program(render_params.gfxprog);
+	if(render_params.gfxprog && (master_render_mode & RMODE_SHADERS)) {
+		::set_gfx_program(render_params.gfxprog);
+	}
+	// XXX: cont. here
 
 	if(mat.two_sided) set_backface_culling(false);
 	if(render_params.use_vertex_color) ::use_vertex_colors(true);
@@ -352,7 +373,8 @@ void Object::render_hack(unsigned long time) {
 	if(mat.two_sided) set_backface_culling(true);
 
 	if(mat.wireframe) ::set_wireframe(false);
-	if((render_params.handle_blending && mat.alpha < 1.0 - small_number) || 
+	if((master_render_mode & RMODE_BLENDING) &&
+			(render_params.handle_blending && mat.alpha < 1.0 - small_number) || 
 			(!render_params.handle_blending && render_params.blending)) {
 		set_alpha_blending(false);
 	}
@@ -360,22 +382,26 @@ void Object::render_hack(unsigned long time) {
 	if(mat.shading == SHADING_FLAT) set_shading_mode(SHADING_GOURAUD);
 
 
-	for(int i=0; i<tex_unit; i++) {
-		disable_texture_unit(i);
-		glDisable(GL_TEXTURE_GEN_S);
-		glDisable(GL_TEXTURE_GEN_T);
-		glDisable(GL_TEXTURE_GEN_R);
-		glMatrixMode(GL_TEXTURE);
-		glLoadIdentity();
-		glMatrixMode(GL_MODELVIEW);
-		set_matrix(XFORM_TEXTURE, Matrix4x4::identity_matrix, i);
-		::set_texture_addressing(tex_unit, TEXADDR_WRAP, TEXADDR_WRAP);
+	if(master_render_mode & RMODE_TEXTURES) {
+		for(int i=0; i<tex_unit; i++) {
+			disable_texture_unit(i);
+			glDisable(GL_TEXTURE_GEN_S);
+			glDisable(GL_TEXTURE_GEN_T);
+			glDisable(GL_TEXTURE_GEN_R);
+			glMatrixMode(GL_TEXTURE);
+			glLoadIdentity();
+			glMatrixMode(GL_MODELVIEW);
+			set_matrix(XFORM_TEXTURE, Matrix4x4::identity_matrix, i);
+			::set_texture_addressing(tex_unit, TEXADDR_WRAP, TEXADDR_WRAP);
+		}
 	}
 
 	if(render_params.show_normals) {
 		draw_normals();
 	}
-	if(render_params.gfxprog) ::set_gfx_program(0);
+	if((master_render_mode & RMODE_SHADERS) && render_params.gfxprog) {
+		::set_gfx_program(0);
+	}
 }
 
 void Object::draw_normals() {

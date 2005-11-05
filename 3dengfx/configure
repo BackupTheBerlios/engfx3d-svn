@@ -7,6 +7,7 @@ gfx=native
 png=yes
 jpeg=yes
 ft=yes
+coord=lhs
 
 for arg
 do
@@ -23,6 +24,18 @@ do
 		case "$value" in
 		sdl|glut|native|gtk)
 			gfx=$value;;
+		esac
+		;;
+	
+	# select coordinate system
+	--with-coord=*)
+		value=`echo $arg | sed 's/--with-coord=//'`
+		case "$value" in
+		lhs|dx)
+			coord=lhs;;
+
+		rhs|gl)
+			coord=rhs;;
 		esac
 		;;
 	
@@ -49,6 +62,7 @@ do
 		echo 'options:'
 		echo '  --prefix=<path>: installation path (default: /usr/local)'
 		echo '  --with-gfxlib=<sdl|glut|native|gtk> (default: native)'
+		echo '  --with-coord=<lhs|rhs> or <dx|gl> (default: lhs)'
 		echo '  --enable-png: enable png support, requires libpng (default)'
 		echo '  --disable-png: disable png support'
 		echo '  --enable-jpeg: enable jpeg support, requres libjpeg (defaul)'
@@ -64,6 +78,7 @@ done
 
 echo "prefix: $prefix"
 echo "gfxlib: $gfx"
+echo "coord: $coord"
 echo "png support: $png"
 echo "jpeg support: $jpeg"
 echo "freetype support: $ft"
@@ -93,14 +108,24 @@ echo "#define GFX_LIBRARY $gfx_def" >>$cfg_file
 
 echo '#define SINGLE_PRECISION_MATH' >>$cfg_file
 
+# handedness (left/right handed system)
+if [ "$coord" = "lhs" ]; then
+	echo '#define COORD_LHS' >>$cfg_file
+else
+	echo '#define COORD_RHS' >>$cfg_file
+fi
+
+# png support
 if [ "$png" = "no" ]; then
 	echo '#define IMGLIB_NO_PNG' >>$cfg_file
 fi
 
+# jpeg support
 if [ "$jpeg" = "no" ]; then
 	echo '#define IMGLIB_NO_JPEG' >> $cfg_file
 fi
 
+# freetype support
 if [ "$ft" = "no" ]; then
 	echo '#define FXWT_NO_FREETYPE' >>$cfg_file
 fi
