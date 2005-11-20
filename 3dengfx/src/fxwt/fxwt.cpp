@@ -51,7 +51,6 @@ using namespace fxwt;
 
 void fxwt::init() {
 	fxwt::text_init();
-	fxwt::widget_init();
 
 	const GraphicsInitParameters *gip = get_graphics_init_parameters();
 	screenx = gip->x;

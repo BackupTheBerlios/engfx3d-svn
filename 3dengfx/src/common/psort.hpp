@@ -50,7 +50,7 @@ template <class T, class P> void sort(T *elements, P *priorities, unsigned int n
 		criterion = less;
 
 	P **pointers = new P*[n];
-	for (int i=0; i<n; i++)
+	for (unsigned int i=0; i<n; i++)
 		pointers[i] = priorities + i;
 
 	// sort priority pointers
@@ -59,7 +59,7 @@ template <class T, class P> void sort(T *elements, P *priorities, unsigned int n
 	// collect sorted items
 	T *sorted_el = new T[n];
 	P *sorted_pr = new P[n];
-	for (int i=0; i<n; i++)
+	for (unsigned int i=0; i<n; i++)
 	{
 		sorted_el[i] = elements[pointers[i] - priorities];
 		sorted_pr[i] = *pointers[i];

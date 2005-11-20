@@ -117,6 +117,16 @@ bool GfxProg::set_parameter(const char *pname, scalar_t val) {
 	return loc == -1 ? false : true;
 }
 
+bool GfxProg::set_parameter(const char *pname, const Vector2 &val) {
+	glUseProgramObject(prog);
+	int loc = glGetUniformLocation(prog, pname);
+	if(loc != -1) {
+		glUniform2f(loc, val.x, val.y);
+	}
+	glUseProgramObject(0);
+	return loc == -1 ? false : true;
+}
+
 bool GfxProg::set_parameter(const char *pname, const Vector3 &val) {
 	glUseProgramObject(prog);
 	int loc = glGetUniformLocation(prog, pname);

@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "n3dmath2/n3dmath2.hpp"
 #include "color.hpp"
 
-typedef unsigned short Index;
+typedef uint32_t Index;
 
 struct TexCoord {
 	scalar_t u, v, w;	// or s,t,v if you prefer... I like u,v,w more though.
@@ -61,11 +61,11 @@ public:
 
 class Edge {
 public:
-	unsigned long vertices[2];
-	unsigned long adjfaces[2];
+	Index vertices[2];
+	Index adjfaces[2];
 
 	Edge();
-	Edge(unsigned long v1, unsigned long v2, unsigned long af1 = NO_ADJFACE, unsigned long af2 = NO_ADJFACE);
+	Edge(Index v1, Index v2, Index af1 = NO_ADJFACE, Index af2 = NO_ADJFACE);
 };
 
 
@@ -73,7 +73,7 @@ class Triangle {
 public:
 	Index vertices[3];
 	Vector3 normal;
-	unsigned long smoothing_group;
+	unsigned int smoothing_group;
 
 	Triangle(Index v1 = 0, Index v2 = 0, Index v3 = 0);
 
@@ -85,7 +85,7 @@ class Quad {
 public:
 	Index vertices[4];
 	Vector3 normal;
-	unsigned long smoothing_group;
+	unsigned int smoothing_group;
 
 	Quad(Index v1 = 0, Index v2 = 0, Index v3 = 0, Index v4 = 0);
 

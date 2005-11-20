@@ -56,6 +56,7 @@ public:
 
 	bool set_parameter(const char *pname, int val);
 	bool set_parameter(const char *pname, scalar_t val);
+	bool set_parameter(const char *pname, const Vector2 &val);
 	bool set_parameter(const char *pname, const Vector3 &val);
 	bool set_parameter(const char *pname, const Vector4 &val);
 	bool set_parameter(const char *pname, const Matrix4x4 &val);

@@ -611,6 +611,8 @@ void draw(const VertexArray &varray) {
 			int dim = ttype[i] == TEX_1D ? 1 : (ttype[i] == TEX_3D || ttype[i] == TEX_CUBE ? 3 : 2);
 			glTexCoordPointer(dim, GL_SCALAR_TYPE, sizeof(Vertex), (void*)((char*)&v.tex[coord_index[i]] - (char*)&v));
 		}
+
+		glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
 	} else {
 		glVertexPointer(3, GL_SCALAR_TYPE, sizeof(Vertex), &varray.get_data()->pos);
 		glNormalPointer(GL_SCALAR_TYPE, sizeof(Vertex), &varray.get_data()->normal);
@@ -626,8 +628,6 @@ void draw(const VertexArray &varray) {
 	}
 	
 	glDrawArrays(primitive_type, 0, varray.get_count());
-	
-	if(use_vbo) glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
 	
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
@@ -663,6 +663,8 @@ void draw(const VertexArray &varray, const IndexArray &iarray) {
 			int dim = ttype[i] == TEX_1D ? 1 : (ttype[i] == TEX_3D || ttype[i] == TEX_CUBE ? 3 : 2);
 			glTexCoordPointer(dim, GL_SCALAR_TYPE, sizeof(Vertex), (void*)((char*)&v.tex[coord_index[i]] - (char*)&v));
 		}
+
+		glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
 	} else {
 		glVertexPointer(3, GL_SCALAR_TYPE, sizeof(Vertex), &varray.get_data()->pos);
 		glNormalPointer(GL_SCALAR_TYPE, sizeof(Vertex), &varray.get_data()->normal);
@@ -679,13 +681,11 @@ void draw(const VertexArray &varray, const IndexArray &iarray) {
 
 	if(use_ibo) {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, iarray.get_buffer_object());
-		glDrawElements(primitive_type, iarray.get_count(), GL_UNSIGNED_SHORT, 0);
+		glDrawElements(primitive_type, iarray.get_count(), GL_UNSIGNED_INT, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 	} else {
-		glDrawElements(primitive_type, iarray.get_count(), GL_UNSIGNED_SHORT, iarray.get_data());
+		glDrawElements(primitive_type, iarray.get_count(), GL_UNSIGNED_INT, iarray.get_data());
 	}
-	
-	if(use_ibo) glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-	if(use_vbo) glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
 	
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);

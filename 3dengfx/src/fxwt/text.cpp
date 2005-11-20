@@ -256,7 +256,7 @@ static string gen_key_str(const char *text) {
 
 static void draw_free_type_bitmap(FT_Bitmap *ftbm, PixelBuffer *pbuf, int x, int y) {
 	int i, j;
-	unsigned long *dptr = pbuf->buffer + y * pbuf->width + x;
+	Pixel *dptr = pbuf->buffer + y * pbuf->width + x;
 	unsigned char *sptr = (unsigned char*)ftbm->buffer;
 
 	assert(x >= 0);
@@ -268,7 +268,7 @@ static void draw_free_type_bitmap(FT_Bitmap *ftbm, PixelBuffer *pbuf, int x, int
 		for(j=0; j<ftbm->width; j++) {
 			if(j + x >= (int)pbuf->width) break;
 
-			unsigned long pixel = *sptr++;
+			Pixel pixel = *sptr++;
 			
 			if(render_mode == TEXT_TRANSPARENT) {
 				*dptr++ = 0x00ffffff | (pixel << 24);
@@ -308,8 +308,8 @@ static PixelBuffer *create_text_image(const char *str, FT_Face face, int font_si
 
 	PixelBuffer *pbuf = new PixelBuffer(pen_x, (int)(font_size * 1.5));
 	
-	unsigned long *dptr = pbuf->buffer;
-	unsigned long *sptr = tmp_buf.buffer;
+	Pixel *dptr = pbuf->buffer;
+	Pixel *sptr = tmp_buf.buffer;
 
 	for(size_t i=0; i<pbuf->height; i++) {
 		memcpy(dptr, sptr, pbuf->width * sizeof(Pixel));

@@ -170,7 +170,7 @@ static void create_normal_cube_map() {
 	static const int size = 32;
 	static const scalar_t fsize = (scalar_t)size;
 	static const scalar_t half_size = fsize / 2.0;
-	unsigned long *ptr;
+	Pixel *ptr;
 	
 	delete normal_cubemap;
 	normal_cubemap = new Texture(size, size, TEX_CUBE);

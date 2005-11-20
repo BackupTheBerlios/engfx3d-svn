@@ -11,8 +11,8 @@ void clean_up();
 void update_gfx();
 void key_handler(int key);
 
-// the GraphicsInitParameters struct holds information about the desired
-// graphics context.
+// the GraphicsInitParameters struct holds information about
+// the desired graphics context.
 GraphicsInitParameters *gip;
 
 const char *title_str = "3dengfx example: black_screen";
@@ -31,7 +31,6 @@ int main(int argc, char **argv) {
 bool init() {
 	// use this function to load a configuration file
 	gip = load_graphics_context_config("3dengfx.conf");
-
 	if (!gip)
 	{
 		// alternatively, one can set the params by hand
@@ -47,6 +46,13 @@ bool init() {
 	if(!create_graphics_context(*gip)) {
 		return false;
 	}
+
+	// Or even, call create_graphics_context() like this...
+	/*
+	if(!create_graphics_context(640, 480, false)) {
+		return false;
+	}
+	*/
 	
 	// set window title
 	fxwt::set_window_title(title_str);
@@ -61,9 +67,8 @@ bool init() {
 }
 
 void update_gfx() {
-	// clear to black
-	clear(Color(0, 0, 0, 0));
-	flip();
+	clear(Color(0, 0, 0, 0));	// clear to black
+	flip();						// swap the buffers
 }
 
 void clean_up() {
@@ -73,7 +78,7 @@ void clean_up() {
 void key_handler(int key) {
 	// exit when escape or 'q' is pressed
 	switch(key) {
-	case 27:
+	case fxwt::KEY_ESCAPE:
 	case 'q':
 		exit(0);
 	default:

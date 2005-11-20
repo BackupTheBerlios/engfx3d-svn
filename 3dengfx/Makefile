@@ -36,12 +36,10 @@ lib3dengfx.a: 3dengfx-config $(obj)
 -include $(obj:.o=.d)
 
 %.d: %.cpp
-	@set -e; rm -f $@; $(CXX) -MM $(CXXFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; rm -f $@.$$$$
+	@rm -f $@; $(CXX) -MM $(CXXFLAGS) $< > $@
 
 %.d: %.c
-	@set -e; rm -f $@; $(CC) -MM $(CFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; rm -f $@.$$$$
+	@rm -f $@; $(CC) -MM $(CFLAGS) $< > $@
 
 
 .PHONY: clean
@@ -50,7 +48,7 @@ clean:
 
 .PHONY: cleandep
 cleandep:
-	find . \( -name '*.d' -o -name '*.d.*' \) -exec $(RM) '{}' ';'
+	$(RM) $(obj:.o=.d)
 
 .PHONY: install
 install:

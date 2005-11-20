@@ -28,11 +28,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <list>
 
-#include "widget.hpp"
-#include "label.hpp"
-#include "button.hpp"
-#include "window.hpp"
-
 #include "text.hpp"
 #include "init.hpp"
 #include "keysyms.hpp"

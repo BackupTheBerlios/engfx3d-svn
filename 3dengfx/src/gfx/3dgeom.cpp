@@ -69,7 +69,7 @@ Edge::Edge() {
 	adjfaces[0] = adjfaces[1] = NO_ADJFACE;
 }
 
-Edge::Edge(unsigned long v1, unsigned long v2, unsigned long af1, unsigned long af2) {
+Edge::Edge(Index v1, Index v2, Index af1, Index af2) {
 	vertices[0] = v1;
 	vertices[1] = v2;
 	adjfaces[0] = af1;
