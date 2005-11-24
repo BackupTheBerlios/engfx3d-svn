@@ -92,6 +92,50 @@ void Triangle::calculate_normal(const Vertex *vbuffer, bool normalize) {
 	if(normalize) normal.normalize();
 }
 
+void Triangle::calculate_tangent(const Vertex *vbuffer, bool normalize){
+	Vector3 a, b, c, d;
+	scalar_t au, bu, cu, du;
+	
+	a = vbuffer[vertices[0]].pos;
+	b = vbuffer[vertices[1]].pos;
+	c = vbuffer[vertices[2]].pos;
+
+	au = vbuffer[vertices[0]].tex[0].u;
+	bu = vbuffer[vertices[1]].tex[0].u;
+	cu = vbuffer[vertices[2]].tex[0].u;
+
+	int i=0;
+
+	// rotate a b and c until au!=bu and au != cu
+	while ( fabs(au - bu) < xsmall_number && 
+			fabs(au - cu) < xsmall_number && i < 3)
+	{
+		du = cu; cu = bu; bu = au; au = du;
+		d = c; c = b; b = a; a = d;
+		i++;
+	}
+
+	if (i == 3)
+	{
+		// all u's are the same. cannot calculate tangent
+		tangent = Vector3(0, 0, 0);
+		return;
+	}
+
+	// find d using linear interpolation
+	d = a + (((bu - au) / (cu - au)) * (c - a));
+	
+	// find the projection of a to b->d
+	Vector3 bd = d - b;
+	bd.normalize();
+	Vector3 ab = b - a;
+	Vector3 a_proj = ab - (dot_product(ab, bd) * bd);
+
+	if (bu > au) tangent = a_proj - a;
+	else tangent = a - a_proj;
+	if (normalize) tangent.normalize();
+}
+
 Quad::Quad(Index v1, Index v2, Index v3, Index v4) {
 	vertices[0] = v1;
 	vertices[1] = v2;

@@ -73,11 +73,13 @@ class Triangle {
 public:
 	Index vertices[3];
 	Vector3 normal;
+	Vector3 tangent;
 	unsigned int smoothing_group;
 
 	Triangle(Index v1 = 0, Index v2 = 0, Index v3 = 0);
 
 	void calculate_normal(const Vertex *vbuffer, bool normalize=false);
+	void calculate_tangent(const Vertex *vbuffer, bool normalize=false);
 };
 
 
