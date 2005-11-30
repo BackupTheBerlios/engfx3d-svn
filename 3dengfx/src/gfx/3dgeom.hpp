@@ -225,7 +225,7 @@ public:
 	
 	VertexStatistics get_vertex_stats() const;
 
-	std::vector<Edge> get_contour_edges(const Vector3 &point_of_view);
+	std::vector<Edge> get_contour_edges(const Vector3 &pov_or_dir, bool dir);
 };
 
 

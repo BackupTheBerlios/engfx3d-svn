@@ -694,7 +694,7 @@ VertexStatistics TriMesh::get_vertex_stats() const {
 }
 
 /* get_contour_edges - (MG)
- * returns the contour edges relative to the given point of view.
+ * returns the contour edges relative to the given point of view or direction
  * The edges are in clockwise order meaning:
  *
  *     EE1-----------EE2		(Extruded Verts)
@@ -706,9 +706,9 @@ VertexStatistics TriMesh::get_vertex_stats() const {
  *           POV				(point of view)
  *
  * so the quad (E1-EE1-EE2-E2) will be in clockwise order
- * point of view should be given in model space
+ * pov_or_dir should be given in model space
  */
-std::vector<Edge> TriMesh::get_contour_edges(const Vector3 &point_of_view)
+std::vector<Edge> TriMesh::get_contour_edges(const Vector3 &pov_or_dir, bool dir)
 {
 	// calculate triangle normals
 	if (! triangle_normals_valid)
@@ -721,12 +721,17 @@ std::vector<Edge> TriMesh::get_contour_edges(const Vector3 &point_of_view)
 	const unsigned long ec = get_edge_array()->get_count();
 	
 	bool *tri_away = new bool[tc];
+	Vector3 direction = pov_or_dir;
 	for (unsigned long i=0; i<tc; i++)
 	{
-		Vector3 tri_center = (va[ta[i].vertices[0]].pos + 
-							  va[ta[i].vertices[1]].pos +
-							  va[ta[i].vertices[2]].pos) / 3;
-		if (dot_product(ta[i].normal, tri_center - point_of_view) > 0)
+		if (! dir)
+		{
+			Vector3 tri_center = (va[ta[i].vertices[0]].pos + 
+								  va[ta[i].vertices[1]].pos +
+								  va[ta[i].vertices[2]].pos) / 3;
+			direction = tri_center - pov_or_dir;
+		}
+		if (dot_product(ta[i].normal, direction) > 0)
 			tri_away[i] = true;
 		else
 			tri_away[i] = false;
