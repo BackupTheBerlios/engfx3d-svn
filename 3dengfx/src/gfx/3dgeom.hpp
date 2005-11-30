@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "n3dmath2/n3dmath2.hpp"
 #include "color.hpp"
 
+#include <vector>
+
 typedef uint32_t Index;
 
 struct TexCoord {
@@ -189,8 +191,11 @@ private:
 	mutable bool vertex_stats_valid;
 	bool indices_valid;
 	bool edges_valid;
-
+	bool triangle_normals_valid;
+	bool triangle_normals_normalized;
+	
 	void calculate_edges();
+	void calculate_triangle_normals(bool normalize);
 	
 public:
 	TriMesh();
@@ -219,6 +224,8 @@ public:
 	void sort_triangles(Vector3 point, bool hilo=true);
 	
 	VertexStatistics get_vertex_stats() const;
+
+	std::vector<Edge> get_contour_edges(const Vector3 &point_of_view);
 };
 
 

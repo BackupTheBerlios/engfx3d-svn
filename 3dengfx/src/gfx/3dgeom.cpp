@@ -281,12 +281,16 @@ TriMesh::TriMesh() {
 	indices_valid = false;
 	vertex_stats_valid = false;
 	edges_valid = false;
+	triangle_normals_valid = false;
+	triangle_normals_normalized = false;
 }
 
 TriMesh::TriMesh(const Vertex *vdata, unsigned long vcount, const Triangle *tdata, unsigned long tcount) {
 	indices_valid = false;
 	vertex_stats_valid = false;
 	edges_valid = false;
+	triangle_normals_valid = false;
+	triangle_normals_normalized = false;
 	set_data(vdata, vcount, tdata, tcount);
 }
 
@@ -398,6 +402,17 @@ void TriMesh::calculate_edges() {
 	delete [] edges;
 }
 
+void TriMesh::calculate_triangle_normals(bool normalize)
+{
+	// calculate the triangle normals
+	for(unsigned int i=0; i<tarray.get_count(); i++) {
+		tarray.get_mod_data()[i].calculate_normal(varray.get_data(), normalize);
+	}
+
+	triangle_normals_valid = true;
+	triangle_normals_normalized = normalize;
+}
+
 const IndexArray *TriMesh::get_index_array() {
 	if(!indices_valid) {
 		tri_to_index_array(&iarray, tarray);
@@ -430,9 +445,8 @@ void TriMesh::calculate_normals_by_index() {
 	}
 
 	// calculate the triangle normals
-	for(unsigned int i=0; i<tarray.get_count(); i++) {
-		tarray.get_mod_data()[i].calculate_normal(varray.get_data(), false);
-	}
+	if (!triangle_normals_valid)
+		calculate_triangle_normals(false);
 	
 	// now calculate the vertex normals
 	for(unsigned int i=0; i<varray.get_count(); i++) {
@@ -677,6 +691,84 @@ VertexStatistics TriMesh::get_vertex_stats() const {
 		vertex_stats_valid = true;
 	}
 	return vstats;
+}
+
+/* get_contour_edges - (MG)
+ * returns the contour edges relative to the given point of view.
+ * The edges are in clockwise order meaning:
+ *
+ *     EE1-----------EE2		(Extruded Verts)
+ *      \            /
+ *       \          /
+ *        E1------E2			(returned Edge - verts 1 and 2)
+ *
+ *
+ *           POV				(point of view)
+ *
+ * so the quad (E1-EE1-EE2-E2) will be in clockwise order
+ * point of view should be given in model space
+ */
+std::vector<Edge> TriMesh::get_contour_edges(const Vector3 &point_of_view)
+{
+	// calculate triangle normals
+	if (! triangle_normals_valid)
+		calculate_triangle_normals(false);
+	
+	const Vertex *va = get_vertex_array()->get_data();
+	const Triangle *ta = get_triangle_array()->get_data();
+	const unsigned long tc = get_triangle_array()->get_count();
+	const Edge *ea = get_edge_array()->get_data();
+	const unsigned long ec = get_edge_array()->get_count();
+	
+	bool *tri_away = new bool[tc];
+	for (unsigned long i=0; i<tc; i++)
+	{
+		Vector3 tri_center = (va[ta[i].vertices[0]].pos + 
+							  va[ta[i].vertices[1]].pos +
+							  va[ta[i].vertices[2]].pos) / 3;
+		if (dot_product(ta[i].normal, tri_center - point_of_view) > 0)
+			tri_away[i] = true;
+		else
+			tri_away[i] = false;
+	}
+
+	// find contour edges
+	std::vector<Edge> contour_edges;
+	for (unsigned long i=0; i<ec; i++)
+	{
+		if (ea[i].adjfaces[1] != NO_ADJFACE)
+		{
+			if (tri_away[ea[i].adjfaces[0]] ^ tri_away[ea[i].adjfaces[1]])
+				contour_edges.push_back(ea[i]);
+		}
+	}
+	
+	// rearrange edges to clockwise order
+	for (unsigned long i=0; i<contour_edges.size(); i++)
+	{
+		Triangle front_tri = ta[contour_edges[i].adjfaces[0]];
+		if (!tri_away[contour_edges[i].adjfaces[1]])
+			front_tri = ta[contour_edges[i].adjfaces[1]];
+
+		int j;
+		for (j=0; j<3 ;j++)
+		{
+			if (front_tri.vertices[j] == contour_edges[i].vertices[0])
+				break;
+		}
+
+		if (front_tri.vertices[(j + 1) % 3] != contour_edges[i].vertices[1])
+		{
+			Index temp = contour_edges[i].vertices[0];
+			contour_edges[i].vertices[0] = contour_edges[i].vertices[1];
+			contour_edges[i].vertices[1] = temp;
+		}
+	}
+	
+	// cleanup
+	delete [] tri_away;
+
+	return contour_edges;
 }
 
 /* JoinTriMesh - (MG)
