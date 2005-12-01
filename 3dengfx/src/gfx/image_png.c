@@ -101,12 +101,14 @@ void *load_png(FILE *fp, unsigned long *xsz, unsigned long *ysz) {
 			
 		default:
 			png_destroy_read_struct(&png_ptr, &info_ptr, 0);
+			fclose(fp);
 			return 0;
 		}
 				
 	}
 	
 	png_destroy_read_struct(&png_ptr, &info_ptr, 0);
+	fclose(fp);
 	
 	return pixels;
 }

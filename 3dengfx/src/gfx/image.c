@@ -76,6 +76,7 @@ void *load_image(const char *fname, unsigned long *xsz, unsigned long *ysz) {
 	}
 #endif	/* IMGLIB_USE_TGA */
 	
+	fclose(file);
 	return 0;
 }
 
