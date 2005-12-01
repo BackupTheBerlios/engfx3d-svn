@@ -40,7 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * AddVertex
  * adds a vertex and returns its index
  */
-unsigned long ScalarField::add_vertex(const Vertex &vert)
+unsigned int ScalarField::add_vertex(const Vertex &vert)
 {
 	verts.push_back(vert);
 	return verts.size() - 1;
@@ -54,8 +54,8 @@ void ScalarField::clear()
 {
 	verts.erase(verts.begin(), verts.end());
 	tris.erase(tris.begin(), tris.end());
-
-	unsigned long num_bytes = dimensions * dimensions * dimensions * sizeof(unsigned long);
+	
+	unsigned int num_bytes = dimensions * dimensions * dimensions * sizeof(unsigned int);
 
 	memset(edges_x, 0xFF, num_bytes);
 	memset(edges_y, 0xFF, num_bytes);
@@ -73,11 +73,11 @@ void ScalarField::evaluate_all(scalar_t t)
 		return;
 	}
 
-	for (unsigned long z=0; z<dimensions; z++)
+	for (unsigned int z=0; z<dimensions; z++)
 	{
-		for (unsigned long y=0; y<dimensions; y++)
+		for (unsigned int y=0; y<dimensions; y++)
 		{
-			for (unsigned long x=0; x<dimensions; x++)
+			for (unsigned int x=0; x<dimensions; x++)
 			{
 				set_value(x, y, z, evaluate(get_position(x, y, z), t));
 			}
@@ -92,14 +92,14 @@ void ScalarField::evaluate_all(scalar_t t)
 void ScalarField::process_cell(int x, int y, int z, scalar_t isolevel)
 {
 	unsigned char cube_index = 0;
-	if (get_value(x, y, z, 0) < isolevel) cube_index |= 1;
-	if (get_value(x, y, z, 1) < isolevel) cube_index |= 2;
-	if (get_value(x, y, z, 2) < isolevel) cube_index |= 4;
-	if (get_value(x, y, z, 3) < isolevel) cube_index |= 8;
-	if (get_value(x, y, z, 4) < isolevel) cube_index |= 16;
-	if (get_value(x, y, z, 5) < isolevel) cube_index |= 32;
-	if (get_value(x, y, z, 6) < isolevel) cube_index |= 64;
-	if (get_value(x, y, z, 7) < isolevel) cube_index |= 128;
+	if(get_value(x, y, z, 0) < isolevel) cube_index |= 1;
+	if(get_value(x, y, z, 1) < isolevel) cube_index |= 2;
+	if(get_value(x, y, z, 2) < isolevel) cube_index |= 4;
+	if(get_value(x, y, z, 3) < isolevel) cube_index |= 8;
+	if(get_value(x, y, z, 4) < isolevel) cube_index |= 16;
+	if(get_value(x, y, z, 5) < isolevel) cube_index |= 32;
+	if(get_value(x, y, z, 6) < isolevel) cube_index |= 64;
+	if(get_value(x, y, z, 7) < isolevel) cube_index |= 128;
 
 	int edge_index = cube_edge_flags[cube_index];
 
@@ -251,7 +251,7 @@ void ScalarField::process_cell(int x, int y, int z, scalar_t isolevel)
 	}
 
 	// Add triangles
-	unsigned long p1, p2, p3;
+	unsigned int p1, p2, p3;
 
 	if (tri_table[cube_index][0] != -1)
 	{
@@ -298,7 +298,7 @@ void ScalarField::process_cell(int x, int y, int z, scalar_t isolevel)
  * GetValueIndex
  * returns the index to the values array for the specified coords
  */
-unsigned long ScalarField::get_value_index(int x, int y, int z)
+unsigned int ScalarField::get_value_index(int x, int y, int z)
 {
 	return x + y * dimensions + z * dimensions * dimensions;
 }
@@ -319,7 +319,7 @@ ScalarField::ScalarField()
 	get_normal = 0;
 }
 
-ScalarField::ScalarField(unsigned long dimensions, const Vector3 &from, const Vector3 &to)
+ScalarField::ScalarField(unsigned int dimensions, const Vector3 &from, const Vector3 &to)
 {
 	this->dimensions = dimensions;
 	this->from = from;
@@ -347,7 +347,7 @@ ScalarField::~ScalarField()
 		delete [] edges_z;
 }
 
-void ScalarField::set_dimensions(unsigned long dimensions)
+void ScalarField::set_dimensions(unsigned int dimensions)
 {
 	this->dimensions = dimensions;
 	if (values)
@@ -361,10 +361,10 @@ void ScalarField::set_dimensions(unsigned long dimensions)
 
 	values = new scalar_t [dimensions * dimensions * dimensions];
 	
-	unsigned long edges_per_dim = dimensions * dimensions * dimensions;
-	edges_x = new unsigned long [edges_per_dim];
-	edges_y = new unsigned long [edges_per_dim];
-	edges_z = new unsigned long [edges_per_dim];
+	unsigned int edges_per_dim = dimensions * dimensions * dimensions;
+	edges_x = new unsigned int[edges_per_dim];
+	edges_y = new unsigned int[edges_per_dim];
+	edges_z = new unsigned int[edges_per_dim];
 
 	clear();
 }
@@ -411,10 +411,10 @@ scalar_t ScalarField::get_value(int cx, int cy, int cz, int vert_index)
 
 // edges are addressed relatively to a cell (cx, cy, cz)
 // and the cell's edge number
-void ScalarField::set_edge(int cx, int cy, int cz, int edge, unsigned long index)
+void ScalarField::set_edge(int cx, int cy, int cz, int edge, unsigned int index)
 {
-	unsigned long d = dimensions;
-	unsigned long d2 = dimensions * dimensions;
+	unsigned int d = dimensions;
+	unsigned int d2 = dimensions * dimensions;
 	
 	if (edge == 0) 
 		edges_x[cx + 0 + (cy + 0) * d + (cz + 1) * d2] =  index;
@@ -442,10 +442,10 @@ void ScalarField::set_edge(int cx, int cy, int cz, int edge, unsigned long index
 		edges_y[cx + 0 + (cy + 0) * d + (cz + 0) * d2] =  index;
 }
 
-unsigned long ScalarField::get_edge(int cx, int cy, int cz, int edge)
+unsigned int ScalarField::get_edge(int cx, int cy, int cz, int edge)
 {
-	unsigned long d = dimensions;
-	unsigned long d2 = dimensions * dimensions;
+	unsigned int d = dimensions;
+	unsigned int d2 = dimensions * dimensions;
 
 	if (edge == 0)  return edges_x[cx + 0 + (cy + 0) * d + (cz + 1) * d2];
 	if (edge == 1)  return edges_z[cx + 1 + (cy + 0) * d + (cz + 0) * d2];
@@ -587,11 +587,11 @@ void ScalarField::triangulate(TriMesh *mesh, scalar_t isolevel, scalar_t t, bool
 	evaluate_all(t);
 
 	// triangulate
-	for (unsigned long z=0; z<dimensions-1; z++)
+	for (unsigned int z=0; z<dimensions-1; z++)
 	{
-		for (unsigned long y=0; y<dimensions-1; y++)
+		for (unsigned int y=0; y<dimensions-1; y++)
 		{
-			for (unsigned long x=0; x<dimensions-1; x++)
+			for (unsigned int x=0; x<dimensions-1; x++)
 			{
 				process_cell(x, y, z, isolevel);
 			}
@@ -599,15 +599,15 @@ void ScalarField::triangulate(TriMesh *mesh, scalar_t isolevel, scalar_t t, bool
 	}
 
 	// Generate TriMesh
-	Vertex *varray = new Vertex [verts.size()];
-	Triangle *tarray = new Triangle [tris.size()];
+	Vertex *varray = new Vertex[verts.size()];
+	Triangle *tarray = new Triangle[tris.size()];
 
-	for (unsigned long i=0; i<verts.size(); i++)
+	for (unsigned int i=0; i<verts.size(); i++)
 	{
 		varray[i] = verts[i];
 	}
 
-	for (unsigned long i=0; i<tris.size(); i++)
+	for (unsigned int i=0; i<tris.size(); i++)
 	{
 		tarray[i] = tris[i];
 	}
@@ -615,7 +615,7 @@ void ScalarField::triangulate(TriMesh *mesh, scalar_t isolevel, scalar_t t, bool
 	// calculate normals, if given a funciton
 	if (calc_normals == true && get_normal != 0)
 	{
-		for (unsigned long i=0; i<verts.size(); i++)
+		for (unsigned int i=0; i<verts.size(); i++)
 		{
 			varray[i].normal = get_normal(varray[i].pos, t);
 		}
