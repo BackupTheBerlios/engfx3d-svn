@@ -53,6 +53,6 @@ void create_teapot(TriMesh *mesh, scalar_t size, int subdiv);
 // fractal stuff
 #define GGEN_NO_RESEED		(-1)
 #define GGEN_RANDOM_SEED	(-2)
-void create_landscape(TriMesh *mesh, const Vector2 &size, int mesh_detail, scalar_t max_height, int iter, int seed = -1);
+void create_landscape(TriMesh *mesh, const Vector2 &size, int mesh_detail, scalar_t max_height, int iter, scalar_t roughness = 0.5, int seed = -1);
 
 #endif	// _GGEN_HPP_

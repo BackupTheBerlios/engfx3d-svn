@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 		John Tsiombikas 2005
  */
 
+#include <float.h>
 #include "3dengfx_config.h"
 #include "gfx/curves.hpp"
 #include "ggen.hpp"
@@ -699,8 +700,12 @@ void create_teapot(TriMesh *mesh, scalar_t size, int subdiv)
 
 // fractal stuff ...
 
-void create_landscape(TriMesh *mesh, const Vector2 &size, int mesh_detail, scalar_t max_height, int iter, int seed) {
+/* create_landscape (JT)
+ * Creates a fractal landscape... (TODO: add algorithm description or something)
+ */
+void create_landscape(TriMesh *mesh, const Vector2 &size, int mesh_detail, scalar_t max_height, int iter, scalar_t roughness, int seed) {
 	create_plane(mesh, Vector3(0, 1, 0), size, mesh_detail);
+	roughness *= 0.25;
 
 	if(seed == GGEN_RANDOM_SEED) {
 		srand(time(0));
@@ -718,19 +723,48 @@ void create_landscape(TriMesh *mesh, const Vector2 &size, int mesh_detail, scala
 		Vector2 pt1(frand(size.x) - size.x / 2.0, frand(size.y) - size.y / 2.0);
 		Vector2 pt2(frand(size.x) - size.x / 2.0, frand(size.y) - size.y / 2.0);
 
+		// find its normal
 		Vector2 normal(pt2.y - pt1.y, pt1.x - pt2.x);
 
 		// classify all points wrt. this line and raise them accordingly.
-		for(int j=0; j<vcount; j++) {
+		for(unsigned long j=0; j<vcount; j++) {
 			Vector3 *vpos = &varray[j].pos;
 			Vector2 vpos2d(vpos->x, vpos->z);
 			
-			if(dot_product(normal, vpos2d - pt1) > 0) {
-				vpos->y += offs;
-			} else {
-				vpos->y -= offs;
+			scalar_t dist = dist_line(pt1, pt2, vpos2d);
+			
+			/* this was considered but it was producing extremely smooth
+			 * results, which looked unnatural.
+			 */
+			/* 
+			if(dot_product(normal, vpos2d - pt1) < 0.0) {
+				dist = -dist;
+			}
+			scalar_t sigmoid = (tanh(dist * size.x * size.y * roughness) + 1.0) * 0.5;
+			vpos->y += offs * sigmoid;
+			*/
+
+			if(dot_product(normal, vpos2d - pt1) > 0.0) {
+				scalar_t sigmoid = tanh(dist * size.x * size.y * roughness);
+				vpos->y += offs * sigmoid;
 			}
 		}
+	}
+
+	// normalize the landscape in the range [0, max_height)
+	scalar_t hmin = FLT_MAX, hmax = 0.0;
+	Vertex *vptr = varray;
+
+	for(unsigned long i=0; i<vcount; i++) {
+		if(vptr->pos.y > hmax) hmax = vptr->pos.y;
+		if(vptr->pos.y < hmin) hmin = vptr->pos.y;
+		vptr++;
+	}
+
+	vptr = varray;
+	for(unsigned long i=0; i<vcount; i++) {
+		vptr->pos.y = max_height * (vptr->pos.y - hmin) / (hmax - hmin);
+		vptr++;
 	}
 
 	mesh->calculate_normals();
