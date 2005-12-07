@@ -696,3 +696,42 @@ void create_teapot(TriMesh *mesh, scalar_t size, int subdiv)
 	delete [] vertices;
 }
 
+
+// fractal stuff ...
+
+void create_landscape(TriMesh *mesh, const Vector2 &size, int mesh_detail, scalar_t max_height, int iter, int seed) {
+	create_plane(mesh, Vector3(0, 1, 0), size, mesh_detail);
+
+	if(seed == GGEN_RANDOM_SEED) {
+		srand(time(0));
+	} else if(seed != GGEN_NO_RESEED) {
+		srand(seed);
+	}
+
+	scalar_t offs = max_height / (scalar_t)iter;
+
+	unsigned long vcount = mesh->get_vertex_array()->get_count();
+	Vertex *varray = mesh->get_mod_vertex_array()->get_mod_data();
+
+	for(int i=0; i<iter; i++) {
+		// pick a partitioning line (2d)
+		Vector2 pt1(frand(size.x) - size.x / 2.0, frand(size.y) - size.y / 2.0);
+		Vector2 pt2(frand(size.x) - size.x / 2.0, frand(size.y) - size.y / 2.0);
+
+		Vector2 normal(pt2.y - pt1.y, pt1.x - pt2.x);
+
+		// classify all points wrt. this line and raise them accordingly.
+		for(int j=0; j<vcount; j++) {
+			Vector3 *vpos = &varray[j].pos;
+			Vector2 vpos2d(vpos->x, vpos->z);
+			
+			if(dot_product(normal, vpos2d - pt1) > 0) {
+				vpos->y += offs;
+			} else {
+				vpos->y -= offs;
+			}
+		}
+	}
+
+	mesh->calculate_normals();
+}
