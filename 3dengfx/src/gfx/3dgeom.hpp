@@ -225,7 +225,9 @@ public:
 	
 	VertexStatistics get_vertex_stats() const;
 
+	// shadow volumes
 	std::vector<Edge> get_contour_edges(const Vector3 &pov_or_dir, bool dir);
+	TriMesh *get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir);
 };
 
 
@@ -233,6 +235,7 @@ public:
  */
 void join_tri_mesh(TriMesh *ret, const TriMesh *m1, const TriMesh *m2);
 TriMesh *join_tri_mesh(const TriMesh *m1, const TriMesh *m2);
+Vector3 extrude(const Vector3 &vec, scalar_t distance, const Vector3 &pov_or_dir, bool dir);
 
 #include "3dgeom.inl"
 

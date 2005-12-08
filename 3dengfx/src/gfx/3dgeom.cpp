@@ -776,7 +776,63 @@ std::vector<Edge> TriMesh::get_contour_edges(const Vector3 &pov_or_dir, bool dir
 	return contour_edges;
 }
 
-/* JoinTriMesh - (MG)
+/* get_uncapped_shadow_volume() - (MG)
+ * specify pov_or_dir in model space
+ * delete the returned mesh after using it
+ */
+const scalar_t infinity = 1000000;
+TriMesh *TriMesh::get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir)
+{
+	TriMesh *ret = new TriMesh;
+	
+	const Vertex *va = get_vertex_array()->get_data();
+	std::vector<Edge> contour_edges = get_contour_edges(pov_or_dir, dir);
+
+	// calculate number of vertices and indices for the mesh
+	unsigned long num_verts = contour_edges.size() * 4;
+	unsigned long num_tris = contour_edges.size() * 2;
+
+	// allocate memory
+	Vertex *verts = new Vertex[num_verts];
+	Triangle *tris = new Triangle[num_tris];
+
+	// add contour vertices
+	for (unsigned long i=0; i<contour_edges.size(); i++)
+	{
+		for (unsigned long j=0; j<2; j++)
+		{
+			verts[2 * i + j].pos = va[contour_edges[i].vertices[j]].pos;
+		}
+	}
+
+	// add extruded vertices
+	for (unsigned long i=0; i<num_verts/2; i++)
+	{
+		verts[i + num_verts/2].pos = extrude(verts[i].pos, infinity, pov_or_dir, dir);
+	}
+
+	// make triangles
+	for (unsigned long i=0; i<num_tris/2; i++)
+	{
+		Index p1, p2, ep1, ep2;
+		p1 = 2 * i;
+		p2 = 2 * i + 1;
+		ep1 = p1 + num_verts / 2;
+		ep2 = p2 + num_verts / 2;
+		tris[2*i] = Triangle(p1, ep1, ep2);
+		tris[2*i + 1] = Triangle(p1, ep2, p2);
+	}
+	
+	ret->set_data(verts, num_verts, tris, num_tris);
+	
+	// cleanup
+	delete [] verts;
+	delete [] tris;
+
+	return ret;
+}
+
+/* join_tri_mesh - (MG)
  * Gets 2 trimeshes and returns a new one
  * that contains both meshes
  */
@@ -822,13 +878,33 @@ void join_tri_mesh(TriMesh *ret, const TriMesh *m1, const TriMesh *m2)
 	delete [] tarray;
 }
 
-/* Nicer JoinTriMesh - (JT)
+/* Nicer join_tri_mesh - (JT)
  * This is a much better way to do things.
  */
 TriMesh *join_tri_mesh(const TriMesh *m1, const TriMesh *m2) {
 	TriMesh *mesh = new TriMesh;
 	join_tri_mesh(mesh, m1, m2);
 	return mesh;
+}
+
+/* extrude() - (MG)
+ * extrude a vertex given a point of view (or direction) to the specified
+ * distance
+ */
+Vector3 extrude(const Vector3 &vec, scalar_t distance, const Vector3 &pov_or_dir, bool dir) {
+	Vector3 direction;
+
+	if (dir) {
+		direction = pov_or_dir;
+	}
+	else {
+		direction = vec - pov_or_dir;
+	}
+
+	direction.normalize();
+	direction *= distance;
+
+	return vec + direction;
 }
 
 /* utilities for finding duplicate vertices - (MG)
