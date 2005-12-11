@@ -832,6 +832,20 @@ TriMesh *TriMesh::get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir
 	return ret;
 }
 
+/* get_shadow_volume - (MG)
+ * returns a capped shadow volume.
+ * Only the front side is capped.
+ * Delete the returned TriMesh* when finished using it.
+ * TODO: implement back cap
+ */
+TriMesh *TriMesh::get_shadow_volume(const Vector3 &pov_or_dir, bool dir)
+{
+	TriMesh *uncapped = get_uncapped_shadow_volume(pov_or_dir, dir);
+	TriMesh *capped = join_tri_mesh(this, uncapped);
+	delete uncapped;
+	return capped;
+}
+
 /* join_tri_mesh - (MG)
  * Gets 2 trimeshes and returns a new one
  * that contains both meshes

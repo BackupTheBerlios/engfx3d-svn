@@ -629,6 +629,7 @@ void ScalarField::triangulate(TriMesh *mesh, scalar_t isolevel, scalar_t t, bool
 	// calculate normals without external function, if needed
 	if (calc_normals == true && get_normal == 0)
 	{
-		mesh->calculate_normals();
+		// the vertices are shared correctly
+		mesh->calculate_normals_by_index();
 	}
 }
