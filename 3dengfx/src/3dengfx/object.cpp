@@ -47,6 +47,8 @@ RenderParams::RenderParams() {
 	hidden = false;
 	show_normals = false;
 	show_normals_scale = 0.5;
+	highlight = false;
+	highlight_color = Color(1.0, 1.0, 1.0);
 	use_vertex_color = false;
 	taddr = TEXADDR_WRAP;
 	auto_normalize = false;
@@ -60,7 +62,7 @@ Object::Object() {
 	bvol_valid = false;
 	bvol = 0;
 	set_dynamic(false);
-	set_shadow_casting(false);
+	set_shadow_casting(true);
 }
 
 Object::Object(const TriMesh &mesh) {
@@ -188,6 +190,16 @@ void Object::set_show_normals(bool enable) {
 
 void Object::set_show_normals_scale(scalar_t scale) {
 	render_params.show_normals_scale = scale;
+}
+
+void Object::set_highlight(bool enable)
+{
+	render_params.highlight = enable;
+}
+
+void Object::set_highlight_color(const Color &color)
+{
+	render_params.highlight_color = color;
 }
 
 void Object::set_auto_global(bool enable) {
@@ -405,6 +417,12 @@ void Object::render_hack(unsigned long time) {
 	if(render_params.show_normals) {
 		draw_normals();
 	}
+
+	if (render_params.highlight)
+	{
+		draw_highlight();
+	}
+	
 	if((master_render_mode & RMODE_SHADERS) && render_params.gfxprog) {
 		::set_gfx_program(0);
 	}
@@ -430,6 +448,41 @@ void Object::draw_normals() {
 	glEnd();
 
 	set_lighting(true);
+}
+
+void Object::draw_highlight()
+{
+	const Vertex *vptr = mesh.get_vertex_array()->get_data();
+
+	// get contour edges relative to viewer
+	Vector3 pov = Vector3(0, 0, 0);
+	Matrix4x4 model = get_matrix(XFORM_WORLD);
+	Matrix4x4 view = get_matrix(XFORM_VIEW);
+	pov.transform(view.inverse());
+	pov.transform(model.inverse());
+	std::vector<Edge> edges = mesh.get_contour_edges(pov, false);
+	
+	set_lighting(false);
+
+	glLineWidth(5);
+	
+	Color clr = render_params.highlight_color;
+	glBegin(GL_LINES);
+	glColor4f(clr.r, clr.g, clr.b, clr.a);
+	for (unsigned int i=0; i<edges.size(); i++) 
+	{
+		Vector3 p1, p2;
+		p1 = vptr[edges[i].vertices[0]].pos;
+		p2 = vptr[edges[i].vertices[1]].pos;
+		glVertex3f(p1.x, p1.y, p1.z);
+		glVertex3f(p2.x, p2.y, p2.z);
+	}
+	glEnd();
+
+	glLineWidth(1);
+	
+	set_lighting(true);
+
 }
 
 void Object::setup_bump_light(unsigned long time) {

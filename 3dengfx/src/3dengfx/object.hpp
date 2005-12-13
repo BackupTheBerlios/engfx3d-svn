@@ -46,6 +46,8 @@ struct RenderParams {
 	bool hidden;
 	bool show_normals;
 	scalar_t show_normals_scale;
+	bool highlight;
+	Color highlight_color;
 	bool two_sided;
 	bool use_vertex_color;
 	TextureAddressing taddr;
@@ -80,6 +82,7 @@ private:
 	void render_hack(unsigned long time);
 
 	void draw_normals();
+	void draw_highlight();
 	
 	void setup_bump_light(unsigned long time);
 	void update_bounding_volume();
@@ -123,6 +126,8 @@ public:
 	void set_hidden(bool enable);
 	void set_show_normals(bool enable);
 	void set_show_normals_scale(scalar_t scale);
+	void set_highlight(bool enable);
+	void set_highlight_color(const Color &color);
 	void set_auto_global(bool enable);
 	void set_use_vertex_color(bool enable);
 	void set_texture_addressing(TextureAddressing taddr);

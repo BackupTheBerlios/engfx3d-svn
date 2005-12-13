@@ -295,9 +295,9 @@ TriMesh::TriMesh(const Vertex *vdata, unsigned long vcount, const Triangle *tdat
 }
 
 void TriMesh::calculate_edges() {
-	std::cerr << "calc_edges()\n";
+/*	std::cerr << "calc_edges()\n";
 
-/*
+
 	vector<Edge> edges;
 
 	Triangle *tptr = tarray.get_mod_data();
