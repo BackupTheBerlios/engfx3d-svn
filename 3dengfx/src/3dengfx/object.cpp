@@ -60,6 +60,7 @@ Object::Object() {
 	bvol_valid = false;
 	bvol = 0;
 	set_dynamic(false);
+	set_shadow_casting(false);
 }
 
 Object::Object(const TriMesh &mesh) {
@@ -203,6 +204,11 @@ void Object::set_texture_addressing(TextureAddressing taddr) {
 
 void Object::set_auto_normalize(bool enable) {
 	render_params.auto_normalize = enable;
+}
+
+void Object::set_shadow_casting(bool enable)
+{
+	render_params.cast_shadows = enable;
 }
 
 void Object::apply_xform(unsigned long time) {

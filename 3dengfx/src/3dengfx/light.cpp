@@ -153,6 +153,11 @@ DirLight::DirLight(const Vector3 &dir, const Color &col) {
 
 DirLight::~DirLight() {}
 
+Vector3 DirLight::get_direction()
+{
+	return dir;
+}
+
 void DirLight::set_gl_light(int n, unsigned long time) const {
 	int light_num = GL_LIGHT0 + n;
 	

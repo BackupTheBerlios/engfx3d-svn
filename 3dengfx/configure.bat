@@ -46,7 +46,7 @@ REM *** CONFIG HEADER ***
 REM *********************
 echo /* this header is created by the 3dengfx configuration script */ > %cfg_file%
 echo #ifndef _3DENGFX_CONFIG_H_ >> %cfg_file%
-echo #define _#DENGFX_CONFIG_H_ >> %cfg_file%
+echo #define _3DENGFX_CONFIG_H_ >> %cfg_file%
 echo #define USING_3DENGFX >> %cfg_file%
 echo #define VER_STR "0.5" >> %cfg_file%
 echo #define PREFIX     "/usr/local" >> %cfg_file%

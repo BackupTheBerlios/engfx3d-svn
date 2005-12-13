@@ -71,6 +71,8 @@ public:
 	DirLight(const Vector3 &dir=Vector3(0, 0, 1), const Color &col=Color(1.0f, 1.0f, 1.0f));
 	virtual ~DirLight();
 
+	Vector3 get_direction();
+	
 	virtual void set_gl_light(int n, unsigned long time = XFORM_LOCAL_PRS) const;
 };
 

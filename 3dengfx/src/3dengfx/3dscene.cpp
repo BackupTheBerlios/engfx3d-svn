@@ -275,6 +275,96 @@ void Scene::setup_lights(unsigned long msec) const {
 	glDisable(GL_LIGHT0 + light_index);
 }
 
+void Scene::set_shadows(bool enable)
+{
+	shadows = enable;
+}
+
+void Scene::render_shadows(unsigned long msec) const
+{
+	// turn off color writes
+	set_color_write(false, false, false, false);
+	
+	// enable stencil buffering
+	set_stencil_buffering(true);
+	set_stencil_func(CMP_ALWAYS);
+	
+	// clear stencil buffer
+	clear_stencil(0);
+	
+	// loop through all lights
+	for (int i=0; i<8; i++)
+	{
+		if (!lights[i]) break;
+		
+		// loop through all occluders
+		std::list<Object *>::const_iterator iter = objects.begin();
+		while (iter != objects.end())
+		{
+			Object *obj = *iter++;
+			RenderParams rp = obj->get_render_params();
+			if (!rp.cast_shadows) continue;
+
+			// transform light to model space
+			Matrix4x4 model_mat = obj->get_prs(msec).get_xform_matrix();
+			Matrix4x4 inv_model_mat = model_mat.inverse();
+			Vector3 pos_or_dir;
+			bool dir;
+
+			DirLight *dirlight = dynamic_cast<DirLight*> (lights[i]);
+			if (!dirlight)
+			{
+				// point light
+				pos_or_dir = lights[i]->get_position(msec);
+				pos_or_dir.transform(inv_model_mat);
+				dir = false;
+			}
+			else
+			{
+				// directional light
+				pos_or_dir = dirlight->get_direction();
+				pos_or_dir.transform((Matrix3x3) inv_model_mat);
+				dir = true;
+			}
+			
+			// produce shadow volume
+			TriMesh *shadow_volume = obj->get_mesh_ptr()->get_shadow_volume(pos_or_dir, dir);
+			
+			set_matrix(XFORM_WORLD, model_mat);
+			
+			// set stencil operation to inc
+			set_stencil_op(SOP_KEEP, SOP_KEEP, SOP_INC);
+			// render front faces of shadow volume
+			set_backface_culling(true);
+			set_front_face(ORDER_CW);
+			draw(shadow_volume->get_vertex_array(), shadow_volume->get_index_array());
+						
+			// set stencil op to dec
+			set_stencil_op(SOP_KEEP, SOP_KEEP, SOP_DEC);
+			// render back faces of shadow volume
+			set_front_face(ORDER_CCW);
+			draw(shadow_volume->get_vertex_array(), shadow_volume->get_index_array());
+			
+			// delete shadow volume
+			delete shadow_volume;
+		}
+	}	
+	
+	set_front_face(ORDER_CW);
+	
+	// turn color writes back on
+	set_color_write(true, true, true, true);
+
+	// clear viewport to scene's ambient light color where stencil is nonzero
+	set_stencil_reference(0);
+	set_stencil_func(CMP_NOTEQUAL);
+	draw_scr_quad(Vector2(0, 0), Vector2(1, 1), ambient_light, true);
+	
+	// disable stencil buffering
+	set_stencil_buffering(false);
+}
+
+
 void Scene::render(unsigned long msec) const {
 	static int level = -1;
 	level++;
@@ -331,6 +421,11 @@ void Scene::render(unsigned long msec) const {
 		(*piter++)->draw();
 	}
 
+	// render shadows
+	if (shadows) {
+		render_shadows(msec);
+	}
+	
 	level--;
 }
 

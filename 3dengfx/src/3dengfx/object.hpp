@@ -50,7 +50,8 @@ struct RenderParams {
 	bool use_vertex_color;
 	TextureAddressing taddr;
 	bool auto_normalize;
-
+	bool cast_shadows;
+	
 	RenderParams();
 };
 
@@ -126,6 +127,7 @@ public:
 	void set_use_vertex_color(bool enable);
 	void set_texture_addressing(TextureAddressing taddr);
 	void set_auto_normalize(bool enable);
+	void set_shadow_casting(bool enable);
 
 	void apply_xform(unsigned long time = XFORM_LOCAL_PRS);
 
