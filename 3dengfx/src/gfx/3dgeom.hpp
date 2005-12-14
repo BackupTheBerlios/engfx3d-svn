@@ -183,7 +183,8 @@ private:
 	VertexArray varray;
 	TriangleArray tarray;
 	IndexArray iarray;
-
+	IndexArray index_graph;
+	
 	GeometryArray<Edge> earray;
 
 	mutable VertexStatistics vstats;
@@ -191,10 +192,12 @@ private:
 	mutable bool vertex_stats_valid;
 	bool indices_valid;
 	bool edges_valid;
+	bool index_graph_valid;
 	bool triangle_normals_valid;
 	bool triangle_normals_normalized;
 	
 	void calculate_edges();
+	void calculate_index_graph();
 	void calculate_triangle_normals(bool normalize);
 	
 public:

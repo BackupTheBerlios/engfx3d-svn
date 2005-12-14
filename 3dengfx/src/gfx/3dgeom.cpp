@@ -281,6 +281,7 @@ TriMesh::TriMesh() {
 	indices_valid = false;
 	vertex_stats_valid = false;
 	edges_valid = false;
+	index_graph_valid = false;
 	triangle_normals_valid = false;
 	triangle_normals_normalized = false;
 }
@@ -289,54 +290,21 @@ TriMesh::TriMesh(const Vertex *vdata, unsigned long vcount, const Triangle *tdat
 	indices_valid = false;
 	vertex_stats_valid = false;
 	edges_valid = false;
+	index_graph_valid = false;
 	triangle_normals_valid = false;
 	triangle_normals_normalized = false;
 	set_data(vdata, vcount, tdata, tcount);
 }
 
 void TriMesh::calculate_edges() {
-/*	std::cerr << "calc_edges()\n";
 
+	if (!index_graph_valid)
+		calculate_index_graph();
 
-	vector<Edge> edges;
-
-	Triangle *tptr = tarray.get_mod_data();
-	for(unsigned int i=0; i<tarray.get_count(); i++) {
-		for(unsigned int j=0; j<3; j++) {	// for every edge of the triangle...
-			unsigned long vindex1 = tptr->vertices[j];
-			unsigned long vindex2 = tptr->vertices[(j + 1) % 3];
-			bool new_edge = true;
-			
-			// search the list of edges for an edge with the same two vertices
-			for(unsigned int k=0; k<edges.size(); k++) {
-				if((edges[k].vertices[0] == vindex1 || edges[k].vertices[0] == vindex2)
-						&& (edges[k].vertices[1] == vindex1 || edges[k].vertices[1] == vindex2)) {
-					
-					assert(edges[k].adjfaces[0] != 0xffffffff);
-					assert(edges[k].adjfaces[1] == 0xffffffff);
-					edges[k].adjfaces[1] = i;
-					
-					new_edge = false;
-					break;
-				}
-			}
-
-			// if we did not find this edge in the list, add a new one.
-			if(new_edge) {
-				edges.push_back(Edge(vindex1, vindex2, i, 0xffffffff));
-			}
-		}
-		
-		tptr++;
-	}
-
-	earray.set_data(&edges[0], edges.size());
-	edges_valid = true;
-*/
-	
 	unsigned int vcount = varray.get_count();
 	vector<Edge> *edge_table = new vector<Edge>[vcount];
 	const Triangle *tris = tarray.get_data();
+	const Index *igraph = index_graph.get_data();
 	unsigned int tcount = tarray.get_count();
 	unsigned int num_edges = 0;
 
@@ -346,8 +314,8 @@ void TriMesh::calculate_edges() {
 		unsigned int a, b, temp;
 		for (unsigned int j=0; j<3; j++)
 		{
-			a = tris[i].vertices[j];
-			b = tris[i].vertices[(j + 1) % 3];
+			a = igraph[tris[i].vertices[j]];
+			b = igraph[tris[i].vertices[(j + 1) % 3]];
 
 			if (a > b)
 			{
@@ -464,105 +432,50 @@ void TriMesh::calculate_normals_by_index() {
 	delete [] tri_indices;
 }
 
-/* class VertexOrder - (MG)
- * used by this module only
- */
-class VertexOrder
-{
-public:
-	Index	order;
-	Vertex	vertex;
-
-	// Constructor
-	VertexOrder()
-	{
-		order = 0;
-		vertex = Vertex();
-	}
-
-	VertexOrder(Index order, const Vertex& vertex)
-	{
-		this->order = order;
-		this->vertex = vertex;
-	}
-};
-
-// fwd declaration
-static std::vector<unsigned int> process_vo_array(VertexOrder *array, unsigned int size, unsigned int crit);
-
 /* TriMesh::calculate_normals() - (MG)
  */
 void TriMesh::calculate_normals()
 {
-	Index *index_graph = new Index[varray.get_count()];
-	for (unsigned int i=0; i<varray.get_count(); i++)
-	{
-		index_graph[i] = i;
-	}
-		
-	VertexOrder *vo = new VertexOrder[varray.get_count()];
-	for (unsigned int i=0; i<varray.get_count(); i++)
-	{
-		vo[i] = VertexOrder(i, varray.get_data()[i]);
-	}
-
-	// sort by x, then by y , then by z, and return constant-z parts
-	std::vector<unsigned int> parts;
-	parts = process_vo_array(vo, varray.get_count(), 0);
+	if (!index_graph_valid)
+		calculate_index_graph();
 	
-	for (unsigned int i=0; i<parts.size(); i += 2)
-	{
-		// find min index of this part
-		Index min_index = vo[parts[i]].order;
-		for (unsigned int j=0; j<parts[i + 1]; j++)
+	// calculate the triangle normals
+	if (!triangle_normals_valid)
+		calculate_triangle_normals(false);
+
+	// precalculate which triangles index each vertex
+	std::vector<unsigned int> *tri_indices;
+	tri_indices = new std::vector<unsigned int>[varray.get_count()];
+
+	for(unsigned int i=0; i<tarray.get_count(); i++) {
+		for(int j=0; j<3; j++) {	
+			Index tri_index = index_graph.get_data()[tarray.get_data()[i].vertices[j]];
+			tri_indices[tri_index].push_back(i);
+		}
+	}
+	
+	// now calculate the vertex normals
+	for(unsigned int i=0; i<varray.get_count(); i++) {
+		
+		if (index_graph.get_data()[i] != i)
 		{
-			if(min_index > vo[parts[i] + j].order) {
-				min_index = vo[parts[i] + j].order;
-			}
+			// normal already calculated. Just copy
+			varray.get_mod_data()[i].normal = varray.get_mod_data()[index_graph.get_data()[i]].normal;
+			continue;
+		}
+			
+		Vector3 normal;
+		for(unsigned int j=0; j<(unsigned int)tri_indices[i].size(); j++) {
+			normal += tarray.get_data()[tri_indices[i][j]].normal;
 		}
 		
-		// replace index
-		for (unsigned int j=0; j<parts[i + 1]; j++)
-			index_graph[vo[parts[i] + j].order] = min_index;
+		// avoid division with zero
+		if (tri_indices[i].size())
+			normal.normalize();
+		varray.get_mod_data()[i].normal = normal;
 	}
-
-	/*
-	// DEBUG
-	printf("Vertex:\t\t\tOldIndex:\tNewIndex:\t\n");
-	printf("-------\t\t\t---------\t---------\t\n");
-	for (unsigned int i=0; i<varray.get_count(); i++)
-	{
-		printf("<%f,%f,%f>\t\t%d\t%d\n", 
-			vo[i].vertex.pos.x, 
-			vo[i].vertex.pos.y, 
-			vo[i].vertex.pos.z,
-			vo[i].order,
-			index_graph[vo[i].order]);
-	}*/
-
-	delete [] vo;
-
-	Triangle *ta = new Triangle[tarray.get_count()];
-	for (unsigned int  i=0; i<tarray.get_count(); i++)
-	{
-		for (unsigned int v=0; v<3; v++)
-		{
-			ta[i].vertices[v] = index_graph[tarray.get_data()[i].vertices[v]];
-		}
-	}
-
-	TriMesh new_mesh;
-	new_mesh.set_data(varray.get_data(), varray.get_count(), ta, tarray.get_count());
-	new_mesh.calculate_normals_by_index();
-
-	// store normals to original mesh
-	for (unsigned int i=0; i<varray.get_count(); i++)
-	{
-		varray.get_mod_data()[i].normal = new_mesh.get_vertex_array()->get_data()[index_graph[i]].normal;
-	}
-
-	delete [] index_graph;
-	delete [] ta;
+	
+	delete [] tri_indices;
 }
 
 void TriMesh::normalize_normals() {
@@ -844,6 +757,73 @@ TriMesh *TriMesh::get_shadow_volume(const Vector3 &pov_or_dir, bool dir)
 	TriMesh *capped = join_tri_mesh(this, uncapped);
 	delete uncapped;
 	return capped;
+}
+
+/* class VertexOrder - (MG)
+ * used by this module only
+ */
+class VertexOrder
+{
+public:
+	Index	order;
+	Vertex	vertex;
+
+	// Constructor
+	VertexOrder()
+	{
+		order = 0;
+		vertex = Vertex();
+	}
+
+	VertexOrder(Index order, const Vertex& vertex)
+	{
+		this->order = order;
+		this->vertex = vertex;
+	}
+};
+
+// fwd declaration
+static std::vector<unsigned int> process_vo_array(VertexOrder *array, unsigned int size, unsigned int crit);
+
+void TriMesh::calculate_index_graph()
+{
+	Index *igraph = new Index[varray.get_count()];
+	for (unsigned int i=0; i<varray.get_count(); i++)
+	{
+		igraph[i] = i;
+	}
+		
+	VertexOrder *vo = new VertexOrder[varray.get_count()];
+	for (unsigned int i=0; i<varray.get_count(); i++)
+	{
+		vo[i] = VertexOrder(i, varray.get_data()[i]);
+	}
+
+	// sort by x, then by y , then by z, and return constant-z parts
+	std::vector<unsigned int> parts;
+	parts = process_vo_array(vo, varray.get_count(), 0);
+	
+	for (unsigned int i=0; i<parts.size(); i += 2)
+	{
+		// find min index of this part
+		Index min_index = vo[parts[i]].order;
+		for (unsigned int j=0; j<parts[i + 1]; j++)
+		{
+			if(min_index > vo[parts[i] + j].order) {
+				min_index = vo[parts[i] + j].order;
+			}
+		}
+		
+		// replace index
+		for (unsigned int j=0; j<parts[i + 1]; j++)
+			igraph[vo[parts[i] + j].order] = min_index;
+	}
+
+	index_graph.set_data(igraph, varray.get_count());
+	index_graph_valid = true;
+	
+	delete [] vo;
+	delete [] igraph;
 }
 
 /* join_tri_mesh - (MG)

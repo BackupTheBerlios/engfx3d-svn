@@ -226,6 +226,8 @@ inline const VertexArray *TriMesh::get_vertex_array() const {
 
 inline VertexArray *TriMesh::get_mod_vertex_array() {
 	vertex_stats_valid = false;
+	edges_valid = false;
+	index_graph_valid = false;
 	triangle_normals_valid = triangle_normals_normalized = false;
 	return &varray;
 }
@@ -237,6 +239,7 @@ inline const TriangleArray *TriMesh::get_triangle_array() const {
 inline TriangleArray *TriMesh::get_mod_triangle_array() {
 	indices_valid = false;
 	edges_valid = false;
+	index_graph_valid = false;
 	triangle_normals_valid = triangle_normals_normalized = false;
 	return &tarray;
 }
