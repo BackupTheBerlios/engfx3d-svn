@@ -49,9 +49,11 @@ RenderParams::RenderParams() {
 	show_normals_scale = 0.5;
 	highlight = false;
 	highlight_color = Color(1.0, 1.0, 1.0);
+	highlight_line_width = 1.0;
 	use_vertex_color = false;
 	taddr = TEXADDR_WRAP;
 	auto_normalize = false;
+	cast_shadows = true;
 }
 
 
@@ -62,7 +64,6 @@ Object::Object() {
 	bvol_valid = false;
 	bvol = 0;
 	set_dynamic(false);
-	set_shadow_casting(true);
 }
 
 Object::Object(const TriMesh &mesh) {
@@ -200,6 +201,11 @@ void Object::set_highlight(bool enable)
 void Object::set_highlight_color(const Color &color)
 {
 	render_params.highlight_color = color;
+}
+
+void Object::set_highlight_line_width(scalar_t width)
+{
+	render_params.highlight_line_width = width;
 }
 
 void Object::set_auto_global(bool enable) {
@@ -464,7 +470,8 @@ void Object::draw_highlight()
 	
 	set_lighting(false);
 
-	glLineWidth(5);
+	glEnable(GL_LINE_SMOOTH);
+	glLineWidth(render_params.highlight_line_width);
 	
 	Color clr = render_params.highlight_color;
 	glBegin(GL_LINES);

@@ -48,6 +48,7 @@ struct RenderParams {
 	scalar_t show_normals_scale;
 	bool highlight;
 	Color highlight_color;
+	scalar_t highlight_line_width;
 	bool two_sided;
 	bool use_vertex_color;
 	TextureAddressing taddr;
@@ -128,6 +129,7 @@ public:
 	void set_show_normals_scale(scalar_t scale);
 	void set_highlight(bool enable);
 	void set_highlight_color(const Color &color);
+	void set_highlight_line_width(scalar_t width);
 	void set_auto_global(bool enable);
 	void set_use_vertex_color(bool enable);
 	void set_texture_addressing(TextureAddressing taddr);

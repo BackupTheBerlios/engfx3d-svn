@@ -624,7 +624,7 @@ VertexStatistics TriMesh::get_vertex_stats() const {
 std::vector<Edge> TriMesh::get_contour_edges(const Vector3 &pov_or_dir, bool dir)
 {
 	// calculate triangle normals
-	if (! triangle_normals_valid)
+	if (!triangle_normals_valid)
 		calculate_triangle_normals(false);
 	
 	const Vertex *va = get_vertex_array()->get_data();

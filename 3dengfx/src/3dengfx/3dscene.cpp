@@ -30,7 +30,7 @@ using std::string;
 
 Scene::Scene() {
 	active_camera = 0;
-	shadows = false;
+	shadows = true;
 	light_halos = false;
 	halo_size = 10.0f;
 	use_fog = false;
@@ -283,7 +283,7 @@ void Scene::set_shadows(bool enable)
 void Scene::render_shadows(unsigned long msec) const
 {
 	// turn off color writes
-	//set_color_write(false, false, false, false);
+	set_color_write(false, false, false, false);
 	
 	// enable stencil buffering
 	set_stencil_buffering(true);
