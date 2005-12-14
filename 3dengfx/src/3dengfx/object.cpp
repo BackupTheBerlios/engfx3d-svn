@@ -48,7 +48,7 @@ RenderParams::RenderParams() {
 	show_normals = false;
 	show_normals_scale = 0.5;
 	highlight = false;
-	highlight_color = Color(1.0, 1.0, 1.0);
+	highlight_color = Color(1.0, 1.0, 1.0, 1.0);
 	highlight_line_width = 1.0;
 	use_vertex_color = false;
 	taddr = TEXADDR_WRAP;
@@ -473,6 +473,9 @@ void Object::draw_highlight()
 	glEnable(GL_LINE_SMOOTH);
 	glLineWidth(render_params.highlight_line_width);
 	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 	Color clr = render_params.highlight_color;
 	glBegin(GL_LINES);
 	glColor4f(clr.r, clr.g, clr.b, clr.a);
@@ -487,6 +490,8 @@ void Object::draw_highlight()
 	glEnd();
 
 	glLineWidth(1);
+	
+	glDisable(GL_BLEND);
 	
 	set_lighting(true);
 
