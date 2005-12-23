@@ -35,6 +35,7 @@ protected:
 	Color ambient_color, diffuse_color, specular_color;
 	scalar_t intensity;
 	scalar_t attenuation[3];
+	bool cast_shadows;
 
 public:
 	Light();
@@ -50,6 +51,9 @@ public:
 	virtual void set_attenuation(scalar_t att0, scalar_t att1, scalar_t att2);
 	virtual scalar_t get_attenuation(int which) const;
 	virtual Vector3 get_attenuation_vector() const;
+
+	virtual void set_shadow_casting(bool shd);
+	virtual bool casts_shadows() const;
 	
 	virtual void set_gl_light(int n, unsigned long time = XFORM_LOCAL_PRS) const = 0;
 };

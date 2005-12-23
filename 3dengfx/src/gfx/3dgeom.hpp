@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "n3dmath2/n3dmath2.hpp"
 #include "color.hpp"
 
+#include <iostream>
 #include <vector>
 
 typedef uint32_t Index;
@@ -70,6 +71,8 @@ public:
 	Edge(Index v1, Index v2, Index af1 = NO_ADJFACE, Index af2 = NO_ADJFACE);
 };
 
+std::ostream &operator <<(std::ostream &o, const Edge &e);
+
 
 class Triangle {
 public:
@@ -83,6 +86,9 @@ public:
 	void calculate_normal(const Vertex *vbuffer, bool normalize=false);
 	void calculate_tangent(const Vertex *vbuffer, bool normalize=false);
 };
+
+std::ostream &operator <<(std::ostream &o, const Triangle &t);
+
 
 
 class Quad {
@@ -229,9 +235,9 @@ public:
 	VertexStatistics get_vertex_stats() const;
 
 	// shadow volumes
-	std::vector<Edge> get_contour_edges(const Vector3 &pov_or_dir, bool dir);
-	TriMesh *get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir);
-	TriMesh *get_shadow_volume(const Vector3 &pov_or_dir, bool dir);
+	std::vector<Edge> *get_contour_edges(const Vector3 &pov_or_dir, bool dir = false);
+	TriMesh *get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir = false);
+	TriMesh *get_shadow_volume(const Vector3 &pov_or_dir, bool dir = false);
 };
 
 

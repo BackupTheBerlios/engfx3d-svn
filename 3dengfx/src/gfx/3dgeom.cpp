@@ -76,6 +76,12 @@ Edge::Edge(Index v1, Index v2, Index af1, Index af2) {
 	adjfaces[1] = af2;
 }
 
+std::ostream &operator <<(std::ostream &o, const Edge &e) {
+	o << "v(" << e.vertices[0] << ", " << e.vertices[1] << ")";
+	o << " t(" << e.adjfaces[0] << ", " << e.adjfaces[1] << ")";
+	return o;
+}
+
 /////////// Triangle class implementation /////////////
 Triangle::Triangle(Index v1, Index v2, Index v3) {
 	vertices[0] = v1;
@@ -134,6 +140,11 @@ void Triangle::calculate_tangent(const Vertex *vbuffer, bool normalize){
 	if (bu > au) tangent = a_proj - a;
 	else tangent = a - a_proj;
 	if (normalize) tangent.normalize();
+}
+
+std::ostream &operator <<(std::ostream &o, const Triangle &t) {
+	o << "[" << t.vertices[0] << ", " << t.vertices[1] << ", " << t.vertices[2] << "]";
+	return o;
 }
 
 Quad::Quad(Index v1, Index v2, Index v3, Index v4) {
@@ -621,100 +632,109 @@ VertexStatistics TriMesh::get_vertex_stats() const {
  * so the quad (E1-EE1-EE2-E2) will be in clockwise order
  * pov_or_dir should be given in model space
  */
-std::vector<Edge> TriMesh::get_contour_edges(const Vector3 &pov_or_dir, bool dir)
+std::vector<Edge> *TriMesh::get_contour_edges(const Vector3 &pov_or_dir, bool dir)
 {
+	static std::vector<Edge> cont_edges;
+	
 	// calculate triangle normals
 	if (!triangle_normals_valid)
 		calculate_triangle_normals(false);
 	
 	const Vertex *va = get_vertex_array()->get_data();
+	unsigned long vc = get_vertex_array()->get_count();
 	const Triangle *ta = get_triangle_array()->get_data();
-	const unsigned long tc = get_triangle_array()->get_count();
+	unsigned long tc = get_triangle_array()->get_count();
 	const Edge *ea = get_edge_array()->get_data();
-	const unsigned long ec = get_edge_array()->get_count();
+	unsigned long ec = get_edge_array()->get_count();
 	
-	bool *tri_away = new bool[tc];
+	vector<Edge> *vert_edge = new vector<Edge>[vc];
+	
 	Vector3 direction = pov_or_dir;
-	for (unsigned long i=0; i<tc; i++)
-	{
-		if (! dir)
-		{
+	for(unsigned long i=0; i<tc; i++) {
+		if(!dir) {
 			Vector3 tri_center = (va[ta[i].vertices[0]].pos + 
 								  va[ta[i].vertices[1]].pos +
 								  va[ta[i].vertices[2]].pos) / 3;
 			direction = tri_center - pov_or_dir;
 		}
-		if (dot_product(ta[i].normal, direction) > 0)
-			tri_away[i] = true;
-		else
-			tri_away[i] = false;
-	}
+		
+		if(dot_product(ta[i].normal, direction) > 0) {
+			for(int j=0; j<3; j++) {
+				int v0idx = j;
+				int v1idx = (j + 1) % 3;
 
-	// find contour edges
-	std::vector<Edge> contour_edges;
-	for (unsigned long i=0; i<ec; i++)
-	{
-		if (ea[i].adjfaces[1] != NO_ADJFACE)
-		{
-			if (tri_away[ea[i].adjfaces[0]] ^ tri_away[ea[i].adjfaces[1]])
-				contour_edges.push_back(ea[i]);
+				Index v0 = ta[i].vertices[v0idx];
+				Index v1 = ta[i].vertices[v1idx];
+				
+				Edge edge(v0, v1);
+				std::vector<Edge>::iterator iter = vert_edge[v0].begin();
+				
+				bool found = false;
+				for(unsigned int k=0; k<vert_edge[v0].size(); k++, iter++) {
+					if(vert_edge[v0][k].vertices[1] == v1) {
+						vert_edge[v0].erase(iter);
+						found = true;
+						break;
+					}
+				}
+
+				if(!found) {
+					iter = vert_edge[v1].begin();
+					for(unsigned int k=0; k<vert_edge[v1].size(); k++, iter++) {
+						if(vert_edge[v1][k].vertices[0] == v0) {
+							vert_edge[v1].erase(iter);
+							found = true;
+							break;
+						}
+					}
+				}
+
+				if(!found) vert_edge[v0].push_back(edge);
+				
+			}
+			
 		}
 	}
-	
-	// rearrange edges to clockwise order
-	for (unsigned long i=0; i<contour_edges.size(); i++)
-	{
-		Triangle front_tri = ta[contour_edges[i].adjfaces[0]];
-		if (!tri_away[contour_edges[i].adjfaces[1]])
-			front_tri = ta[contour_edges[i].adjfaces[1]];
 
-		int j;
-		for (j=0; j<3 ;j++)
-		{
-			if (front_tri.vertices[j] == contour_edges[i].vertices[0])
-				break;
-		}
-
-		if (front_tri.vertices[(j + 1) % 3] != contour_edges[i].vertices[1])
-		{
-			Index temp = contour_edges[i].vertices[0];
-			contour_edges[i].vertices[0] = contour_edges[i].vertices[1];
-			contour_edges[i].vertices[1] = temp;
+	cont_edges.clear();
+	for(unsigned int i=0; i<vc; i++) {
+		for(unsigned int j=0; j<vert_edge[i].size(); j++) {
+			Edge edge(vert_edge[i][j].vertices[1], vert_edge[i][j].vertices[0]);
+			//cont_edges.push_back(vert_edge[i][j]);
+			cont_edges.push_back(edge);
 		}
 	}
-	
-	// cleanup
-	delete [] tri_away;
 
-	return contour_edges;
+	return &cont_edges;
 }
 
 /* get_uncapped_shadow_volume() - (MG)
  * specify pov_or_dir in model space
  * delete the returned mesh after using it
  */
-const scalar_t infinity = 1000000;
+const scalar_t infinity = 100;
 TriMesh *TriMesh::get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir)
 {
 	TriMesh *ret = new TriMesh;
 	
 	const Vertex *va = get_vertex_array()->get_data();
-	std::vector<Edge> contour_edges = get_contour_edges(pov_or_dir, dir);
+	std::vector<Edge> *contour_edges = get_contour_edges(pov_or_dir, dir);
 
 	// calculate number of vertices and indices for the mesh
-	unsigned long num_verts = contour_edges.size() * 4;
-	unsigned long num_tris = contour_edges.size() * 2;
+	unsigned long num_quads = contour_edges->size();
+	unsigned long num_verts = num_quads * 4;
+	unsigned long num_tris = num_quads * 2;
 
 	// allocate memory
 	Vertex *verts = new Vertex[num_verts];
 	Triangle *tris = new Triangle[num_tris];
 
 	// add contour vertices
-	for (unsigned long i=0; i<contour_edges.size(); i++)
+	for (unsigned long i=0; i<num_quads; i++)
 	{
 		for (unsigned long j=0; j<2; j++)
 		{
-			verts[2 * i + j].pos = va[contour_edges[i].vertices[j]].pos;
+			verts[2 * i + j].pos = va[(*contour_edges)[i].vertices[j]].pos;
 		}
 	}
 
@@ -725,7 +745,7 @@ TriMesh *TriMesh::get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir
 	}
 
 	// make triangles
-	for (unsigned long i=0; i<num_tris/2; i++)
+	for (unsigned long i=0; i<num_quads; i++)
 	{
 		Index p1, p2, ep1, ep2;
 		p1 = 2 * i;

@@ -282,8 +282,15 @@ void Scene::set_shadows(bool enable)
 
 void Scene::render_shadows(unsigned long msec) const
 {
+
+	set_lighting(false);
+	
 	// turn off color writes
 	set_color_write(false, false, false, false);
+	
+	// zbuffer states
+	set_zbuffering(true);
+	set_zwrite(false);
 	
 	// enable stencil buffering
 	set_stencil_buffering(true);
@@ -295,7 +302,8 @@ void Scene::render_shadows(unsigned long msec) const
 	// loop through all lights
 	for (int i=0; i<8; i++)
 	{
-		if (!lights[i]) break;
+		if(!lights[i]) break;
+		if(!lights[i]->casts_shadows()) continue;
 		
 		// loop through all occluders
 		std::list<Object *>::const_iterator iter = objects.begin();
@@ -312,18 +320,13 @@ void Scene::render_shadows(unsigned long msec) const
 			bool dir;
 
 			DirLight *dirlight = dynamic_cast<DirLight*> (lights[i]);
-			if (!dirlight)
-			{
-				// point light
+			if(!dirlight) { // point light
 				pos_or_dir = lights[i]->get_position(msec);
 				pos_or_dir.transform(inv_model_mat);
 				dir = false;
-			}
-			else
-			{
-				// directional light
+			} else { // directional light
 				pos_or_dir = dirlight->get_direction();
-				pos_or_dir.transform((Matrix3x3) inv_model_mat);
+				pos_or_dir.transform((Matrix3x3)inv_model_mat);
 				dir = true;
 			}
 			
@@ -337,18 +340,19 @@ void Scene::render_shadows(unsigned long msec) const
 			// render front faces of shadow volume
 			set_backface_culling(true);
 			set_front_face(ORDER_CW);
-			draw(shadow_volume->get_vertex_array(), shadow_volume->get_index_array());
+			draw(*shadow_volume->get_vertex_array(), *shadow_volume->get_index_array());
 						
 			// set stencil op to dec
 			set_stencil_op(SOP_KEEP, SOP_KEEP, SOP_DEC);
 			// render back faces of shadow volume
 			set_front_face(ORDER_CCW);
-			draw(shadow_volume->get_vertex_array(), shadow_volume->get_index_array());
 			
-			// delete shadow volume
+			draw(*shadow_volume->get_vertex_array(), *shadow_volume->get_index_array());
 			delete shadow_volume;
 		}
-	}	
+	}
+
+	set_zwrite(true);
 	
 	set_front_face(ORDER_CW);
 	
@@ -362,6 +366,9 @@ void Scene::render_shadows(unsigned long msec) const
 	
 	// disable stencil buffering
 	set_stencil_buffering(false);
+
+	//set_alpha_blending(false);
+	set_lighting(true);
 }
 
 

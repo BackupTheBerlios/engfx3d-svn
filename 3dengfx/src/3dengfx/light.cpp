@@ -32,6 +32,7 @@ Light::Light() {
 	attenuation[0] = 1.0f;
 	attenuation[1] = 0.0f;
 	attenuation[2] = 0.0f;
+	cast_shadows = true;
 }
 
 Light::~Light() {}
@@ -91,6 +92,14 @@ scalar_t Light::get_attenuation(int which) const {
 
 Vector3 Light::get_attenuation_vector() const {
 	return Vector3(attenuation[0], attenuation[1], attenuation[2]);
+}
+
+void Light::set_shadow_casting(bool shd) {
+	cast_shadows = shd;
+}
+
+bool Light::casts_shadows() const {
+	return cast_shadows;
 }
 
 // ------- point lights -------

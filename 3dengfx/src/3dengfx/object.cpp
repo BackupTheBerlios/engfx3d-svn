@@ -466,7 +466,7 @@ void Object::draw_highlight()
 	Matrix4x4 view = get_matrix(XFORM_VIEW);
 	pov.transform(view.inverse());
 	pov.transform(model.inverse());
-	std::vector<Edge> edges = mesh.get_contour_edges(pov, false);
+	std::vector<Edge> *edges = mesh.get_contour_edges(pov, false);
 	
 	set_lighting(false);
 
@@ -479,11 +479,11 @@ void Object::draw_highlight()
 	Color clr = render_params.highlight_color;
 	glBegin(GL_LINES);
 	glColor4f(clr.r, clr.g, clr.b, clr.a);
-	for (unsigned int i=0; i<edges.size(); i++) 
+	for (unsigned int i=0; i<edges->size(); i++) 
 	{
 		Vector3 p1, p2;
-		p1 = vptr[edges[i].vertices[0]].pos;
-		p2 = vptr[edges[i].vertices[1]].pos;
+		p1 = vptr[(*edges)[i].vertices[0]].pos;
+		p2 = vptr[(*edges)[i].vertices[1]].pos;
 		glVertex3f(p1.x, p1.y, p1.z);
 		glVertex3f(p2.x, p2.y, p2.z);
 	}

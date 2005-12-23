@@ -780,6 +780,8 @@ void draw_scr_quad(const Vector2 &corner1, const Vector2 &corner2, const Color &
 	glLoadIdentity();
 	glOrtho(0.0, 1.0, 1.0, 0.0, 0.0, 1.0);
 
+	glDisable(GL_LIGHTING);
+
 	glBegin(GL_QUADS);
 	glColor4f(color.r, color.g, color.b, color.a);
 	glTexCoord2f(0.0f, 1.0f);
@@ -791,6 +793,8 @@ void draw_scr_quad(const Vector2 &corner1, const Vector2 &corner2, const Color &
 	glTexCoord2f(0.0f, 0.0f);
 	glVertex3f(corner1.x, corner2.y, -0.5);
 	glEnd();
+
+	glEnable(GL_LIGHTING);
 
 	glPopMatrix();
 
