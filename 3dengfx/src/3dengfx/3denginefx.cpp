@@ -381,7 +381,9 @@ bool create_graphics_context(const GraphicsInitParameters &gip) {
 	
 	gparams = gip;
 
-	remove(get_log_filename());
+	if(remove(get_log_filename()) != 0) {
+		std::cerr << "failed to remove log: " << get_log_filename() << "\n";
+	}
 
 	set_verbosity(2);
 

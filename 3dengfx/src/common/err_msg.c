@@ -86,6 +86,9 @@ void set_log_filename(const char *fname) {
 }
 
 const char *get_log_filename(void) {
+	if(!*log_fname) {
+		return default_log_fname();
+	}
 	return log_fname;
 }
 
