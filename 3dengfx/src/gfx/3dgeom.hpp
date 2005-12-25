@@ -236,7 +236,7 @@ public:
 
 	// shadow volumes
 	std::vector<Edge> *get_contour_edges(const Vector3 &pov_or_dir, bool dir = false);
-	TriMesh *get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir = false);
+	//TriMesh *get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir = false);
 	TriMesh *get_shadow_volume(const Vector3 &pov_or_dir, bool dir = false);
 };
 

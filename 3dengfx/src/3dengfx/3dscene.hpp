@@ -34,7 +34,9 @@ struct ShadowVolume {
 
 class Scene {
 private:
-	Light *lights[8];
+	Light **lights;
+	int lcount, max_lights;
+
 	std::list<Camera *> cameras;
 	TargetCamera *cubic_cam[6];
 	std::list<Object*> objects;
@@ -109,8 +111,10 @@ public:
 	// render states
 	void setup_lights(unsigned long msec = XFORM_LOCAL_PRS) const;
 
-	void render_shadows(unsigned long msec = XFORM_LOCAL_PRS) const;
 	void render(unsigned long msec = XFORM_LOCAL_PRS) const;
+	void render_objects(unsigned long msec = XFORM_LOCAL_PRS) const;
+	void render_particles(unsigned long msec = XFORM_LOCAL_PRS) const;
+	void render_svol(int lidx, unsigned long msec = XFORM_LOCAL_PRS) const;
 	void render_cube_map(Object *obj, unsigned long msec = XFORM_LOCAL_PRS) const;
 
 	void render_sequence(unsigned long start, unsigned long end, int fps = 30, const char *out_dir = "frames");

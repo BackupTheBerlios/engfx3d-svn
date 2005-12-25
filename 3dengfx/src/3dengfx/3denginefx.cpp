@@ -160,7 +160,6 @@ GraphicsInitParameters *load_graphics_context_config(const char *fname) {
 	gip.stencil_bits = 8;
 	gip.dont_care_flags = 0;
 
-	set_log_filename("3dengfx.log");
 	set_verbosity(2);
 	
 	if(load_config_file(fname) == -1) {
@@ -260,9 +259,7 @@ SysCaps get_system_capabilities() {
 		cptr++;
 	}
 
-	set_log_filename("gl_ext.log");
 	info("Supported extensions:\n-------------\n%s", ext_str);
-	set_log_filename("3dengfx.log");
 		
 	info("Rendering System Information:");
 
@@ -285,6 +282,7 @@ SysCaps get_system_capabilities() {
 	sys_caps.point_sprites = (bool)strstr(ext_str, "GL_ARB_point_sprites");
 	sys_caps.point_params = (bool)strstr(ext_str, "GL_ARB_point_parameters");
 	glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &sys_caps.max_texture_units);
+	glGetIntegerv(GL_MAX_LIGHTS, &sys_caps.max_lights);
 	
 	sys_caps.prog.asm_vertex = (bool)strstr(ext_str, "GL_ARB_vertex_program");
 	sys_caps.prog.asm_pixel = (bool)strstr(ext_str, "GL_ARB_fragment_program");
@@ -315,6 +313,7 @@ SysCaps get_system_capabilities() {
 	info("Point sprites: %s", sys_caps.point_sprites ? "yes" : "no");
 	info("Point parameters: %s", sys_caps.point_params ? "yes" : "no");
 	info("Texture units: %d", sys_caps.max_texture_units);
+	info("Max lights: %d", sys_caps.max_lights);
 
 	if(!sys_caps.point_sprites && !sys_caps.point_params) {
 		warning("no point sprites support, falling back to billboards which *may* degrade particle system performance");
@@ -351,8 +350,26 @@ void load_matrix_transpose_manual(const Matrix4x4 &mat) {
 
 //////////////// 3D Engine Initialization ////////////////
 
+static const char *signame(int sig) {
+	switch(sig) {
+	case SIGSEGV:
+		return "segmentation fault (SIGSEGV)";
+	case SIGILL:
+		return "illegal instruction (SIGILL)";
+	case SIGTERM:
+		return "termination signal (SIGTERM)";
+	case SIGFPE:
+		return "floating point exception (SIGFPE)";
+	case SIGINT:
+		return "interrupt signal (SIGINT)";
+	default:
+		return "unknown";
+	}
+	return "can't happen";
+}
+
 static void signal_handler(int sig) {
-	error("It seems this is the end... caught signal %d, exiting...\n", sig);
+	error("It seems this is the end... caught %s, exiting...\n", signame(sig));
 	destroy_graphics_context();
 	exit(-1);
 }
@@ -364,10 +381,8 @@ bool create_graphics_context(const GraphicsInitParameters &gip) {
 	
 	gparams = gip;
 
-	remove("3dengfx.log");
-	remove("gl_ext.log");
+	remove(get_log_filename());
 
-	set_log_filename("3dengfx.log");
 	set_verbosity(2);
 
 	if(!fxwt::init_graphics(&gparams)) {

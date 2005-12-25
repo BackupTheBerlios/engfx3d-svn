@@ -55,6 +55,8 @@ bool init() {
 	fxwt::set_keyboard_handler(key_handler);
 	atexit(clean_up);
 
+	glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
 	// create a scene
 	scene = new Scene;
 	
@@ -63,29 +65,30 @@ bool init() {
 	scene->add_camera(cam);
 
 	// add a light
-	Light *lt = new PointLight(Vector3(-20, 100, -200));
-	lt->set_intensity(0.8);
+	Light *lt = new PointLight(Vector3(-20, 100, 200));
+	lt->set_intensity(0.9);
+	lt->set_shadow_casting(true);
 	scene->add_light(lt);
 
 	Light *lt2 = new PointLight(Vector3(0, 80, 80));
-	lt2->set_intensity(0.3);
+	lt2->set_intensity(0.4);
 	lt2->set_shadow_casting(false);
-	//scene->add_light(lt2);
+	scene->add_light(lt2);
 
 	Object *obj = new ObjPlane(Vector3(0, 1, 0), Vector2(80, 80), 10);
 	scene->add_object(obj);
 	obj->set_shadow_casting(false);
 
 	Object *tea = new ObjTeapot(1.0, 2);
+	tea->calculate_normals();
 	tea->set_shadow_casting(true);
 	scene->add_object(tea);
 
-	vol_obj = new Object;
-	TriMesh *sv = tea->get_mesh_ptr()->get_shadow_volume(lt->get_position());
-	sv->calculate_normals();
-	vol_obj->set_mesh(*sv);
-	delete sv;
-	//scene->add_object(vol_obj);
+	MotionController mctrl(CTRL_LIN, TIME_FREE);
+	mctrl.set_control_axis(CTRL_XY);
+	tea->add_controller(mctrl, CTRL_ROTATION);
+	tea->set_pivot(Vector3(0, 1.5, 0));
+	tea->translate(Vector3(0, 1, 0));
 
 	scene->set_shadows(true);
 
@@ -99,11 +102,6 @@ void update_gfx() {
 	unsigned long time = timer_getmsec(&timer);
 	
 	scene->render(time);	// render the scene
-
-	if(show_volumes) {
-		vol_obj->render(time);
-	}
-	
 	flip();					// swap the buffers
 }
 
@@ -136,11 +134,6 @@ void key_handler(int key) {
 
 	case 'z':
 		if(cam) cam->zoom(1.1);
-		break;
-
-	case 's':
-		show_volumes = !show_volumes;
-		scene->set_shadows(!show_volumes);
 		break;
 		
 	default:

@@ -32,7 +32,7 @@ Light::Light() {
 	attenuation[0] = 1.0f;
 	attenuation[1] = 0.0f;
 	attenuation[2] = 0.0f;
-	cast_shadows = true;
+	cast_shadows = false;
 }
 
 Light::~Light() {}

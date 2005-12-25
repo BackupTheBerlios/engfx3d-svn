@@ -617,45 +617,32 @@ VertexStatistics TriMesh::get_vertex_stats() const {
 	return vstats;
 }
 
-/* get_contour_edges - (MG)
+/* get_contour_edges - (MG, JT)
  * returns the contour edges relative to the given point of view or direction
- * The edges are in clockwise order meaning:
- *
- *     EE1-----------EE2		(Extruded Verts)
- *      \            /
- *       \          /
- *        E1------E2			(returned Edge - verts 1 and 2)
- *
- *
- *           POV				(point of view)
- *
- * so the quad (E1-EE1-EE2-E2) will be in clockwise order
- * pov_or_dir should be given in model space
+ * The edges are in clockwise order, so they can be used to create a shadow volume
+ * mesh by extruding them...
+ * NOTE: pov_or_dir should be given in model space
  */
 std::vector<Edge> *TriMesh::get_contour_edges(const Vector3 &pov_or_dir, bool dir)
 {
 	static std::vector<Edge> cont_edges;
 	
 	// calculate triangle normals
-	if (!triangle_normals_valid)
+	if(!triangle_normals_valid) {
 		calculate_triangle_normals(false);
+	}
 	
 	const Vertex *va = get_vertex_array()->get_data();
 	unsigned long vc = get_vertex_array()->get_count();
 	const Triangle *ta = get_triangle_array()->get_data();
 	unsigned long tc = get_triangle_array()->get_count();
-	const Edge *ea = get_edge_array()->get_data();
-	unsigned long ec = get_edge_array()->get_count();
 	
 	vector<Edge> *vert_edge = new vector<Edge>[vc];
 	
 	Vector3 direction = pov_or_dir;
 	for(unsigned long i=0; i<tc; i++) {
 		if(!dir) {
-			Vector3 tri_center = (va[ta[i].vertices[0]].pos + 
-								  va[ta[i].vertices[1]].pos +
-								  va[ta[i].vertices[2]].pos) / 3;
-			direction = tri_center - pov_or_dir;
+			direction = va[ta[i].vertices[0]].pos - pov_or_dir;
 		}
 		
 		if(dot_product(ta[i].normal, direction) > 0) {
@@ -666,7 +653,7 @@ std::vector<Edge> *TriMesh::get_contour_edges(const Vector3 &pov_or_dir, bool di
 				Index v0 = ta[i].vertices[v0idx];
 				Index v1 = ta[i].vertices[v1idx];
 				
-				Edge edge(v0, v1);
+				Edge edge(v1, v0);
 				std::vector<Edge>::iterator iter = vert_edge[v0].begin();
 				
 				bool found = false;
@@ -699,9 +686,7 @@ std::vector<Edge> *TriMesh::get_contour_edges(const Vector3 &pov_or_dir, bool di
 	cont_edges.clear();
 	for(unsigned int i=0; i<vc; i++) {
 		for(unsigned int j=0; j<vert_edge[i].size(); j++) {
-			Edge edge(vert_edge[i][j].vertices[1], vert_edge[i][j].vertices[0]);
-			//cont_edges.push_back(vert_edge[i][j]);
-			cont_edges.push_back(edge);
+			cont_edges.push_back(vert_edge[i][j]);
 		}
 	}
 
@@ -712,8 +697,8 @@ std::vector<Edge> *TriMesh::get_contour_edges(const Vector3 &pov_or_dir, bool di
  * specify pov_or_dir in model space
  * delete the returned mesh after using it
  */
-const scalar_t infinity = 100;
-TriMesh *TriMesh::get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir)
+const scalar_t infinity = 100000;
+TriMesh *TriMesh::get_shadow_volume(const Vector3 &pov_or_dir, bool dir)
 {
 	TriMesh *ret = new TriMesh;
 	
@@ -771,13 +756,13 @@ TriMesh *TriMesh::get_uncapped_shadow_volume(const Vector3 &pov_or_dir, bool dir
  * Delete the returned TriMesh* when finished using it.
  * TODO: implement back cap
  */
-TriMesh *TriMesh::get_shadow_volume(const Vector3 &pov_or_dir, bool dir)
+/*TriMesh *TriMesh::get_shadow_volume(const Vector3 &pov_or_dir, bool dir)
 {
 	TriMesh *uncapped = get_uncapped_shadow_volume(pov_or_dir, dir);
 	TriMesh *capped = join_tri_mesh(this, uncapped);
 	delete uncapped;
 	return capped;
-}
+}*/
 
 /* class VertexOrder - (MG)
  * used by this module only
