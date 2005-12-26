@@ -18,7 +18,6 @@ Scene *scene;
 ntimer timer;
 
 Object *vol_obj;
-bool show_volumes = false;
 
 int main(int argc, char **argv) {
 	if(!init()) {

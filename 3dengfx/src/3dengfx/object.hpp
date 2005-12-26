@@ -147,6 +147,11 @@ public:
 
 // --- some convinient derived objects for geom. generation ---
 
+class ObjCube : public Object {
+public:
+	ObjCube(scalar_t sz, int subdiv);
+};
+
 class ObjPlane : public Object {
 public:
 	ObjPlane(const Vector3 &normal = Vector3(0, 1, 0), const Vector2 &size = Vector2(1, 1), int subdiv = 0);

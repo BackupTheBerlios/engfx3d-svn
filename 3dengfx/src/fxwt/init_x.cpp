@@ -1,21 +1,20 @@
 /*
-This file is part of the 3dengfx, realtime visualization system.
+This file is part of 3dengfx, realtime visualization system.
+Copyright (C) 2004, 2005, 2006 John Tsiombikas <nuclear@siggraph.org>
 
-Copyright (C) 2005 John Tsiombikas <nuclear@siggraph.org>
-
-3dengfx is free software; you can redistribute it and/or modify
+This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 
-3dengfx is distributed in the hope that it will be useful,
+This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with 3dengfx; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 /* OpenGL through GLX (X Window System)
@@ -33,9 +32,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "3dengfx/3denginefx.hpp"
 #include "common/err_msg.h"
 
+#ifdef USE_XF86VIDMODE
+#include <X11/extensions/xf86vmode.h>
+
+static XF86VidModeModeInfo orig_mode;
+#endif	// USE_XF86VIDMODE
+
 Display *fxwt_x_dpy;
 Window fxwt_x_win;
 static GLXContext glx_ctx;
+static bool fullscreen = false;
 
 bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 	Display *dpy;
@@ -85,6 +91,9 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 
 	// determine zbuffer bits
 	int zbits = gparams->depth_bits == 32 ? 24 : gparams->depth_bits;
+	if(gparams->dont_care_flags & DONT_CARE_BPP) {
+		zbits = 1;
+	}
 	
 	int glx_attrib[] = {
 		GLX_RGBA, GLX_DOUBLEBUFFER,
@@ -161,15 +170,19 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 	xattr.colormap = XCreateColormap(dpy, root_win, vis_info->visual, AllocNone);
 
 	if(gparams->fullscreen) {
-		/*
+		// TODO: also test for "XFree86-VidModeExtension"
+#ifdef USE_XF86VIDMODE
+		info("Using XF86VidMode extension for fullscreen resolution switch.");
+		
 		XF86VidModeModeInfo **modes;
 		XF86VidModeModeInfo *vid_mode = 0;
 		int mode_count;
+		
 		XF86VidModeGetAllModeLines(dpy, screen, &mode_count, &modes);
 		orig_mode = *modes[0];
 
 		for(int i=0; i<mode_count; i++) {
-			if(modes[i]->hdisplay == iparams->x && modes[i]->vdisplay == iparams->y) {
+			if(modes[i]->hdisplay == gparams->x && modes[i]->vdisplay == gparams->y) {
 				vid_mode = modes[i];
 			}
 		}
@@ -186,23 +199,41 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 		XFree(modes);
 
 		xattr.override_redirect = True;
-		win = XCreateWindow(dpy, root_win, 0, 0, iparams->x, iparams->y, 0, vis_info->depth, InputOutput, vis_info->visual, CWColormap | CWOverrideRedirect, &xattr);
+		win = XCreateWindow(dpy, root_win, 0, 0, gparams->x, gparams->y, 0, vis_info->depth,
+				InputOutput, vis_info->visual, CWColormap | CWBackPixel | CWBorderPixel | CWOverrideRedirect, &xattr);
 
 		XWarpPointer(dpy, None, win, 0, 0, 0, 0, 0, 0);
 		XMapRaised(dpy, win);
         XGrabKeyboard(dpy, win, True, GrabModeAsync, GrabModeAsync, CurrentTime);
         XGrabPointer(dpy, win, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, win, None, CurrentTime);
-		
+#else
+		info("Resolution switching is not compiled or not supported by the X server, using a full-screen window.");
+
+		XWindowAttributes root_attr;
+		XGetWindowAttributes(dpy, root_win, &root_attr);
+
+		gparams->x = root_attr.width;
+		gparams->y = root_attr.height;
+		xattr.override_redirect = True;
+		win = XCreateWindow(dpy, root_win, 0, 0, gparams->x, gparams->y, 0, vis_info->depth,
+				InputOutput, vis_info->visual, CWColormap | CWBackPixel | CWBorderPixel | CWOverrideRedirect, &xattr);
+
+		XWarpPointer(dpy, None, win, 0, 0, 0, 0, 0, 0);
+		XMapRaised(dpy, win);
+        XGrabKeyboard(dpy, win, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+        XGrabPointer(dpy, win, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, win, None, CurrentTime);
+#endif	// USE_XF86VIDMODE
+
 		fullscreen = true;
-		*/
 	} else {
 		win = XCreateWindow(dpy, root_win, 0, 0, gparams->x, gparams->y, 0, vis_info->depth,
 				InputOutput, vis_info->visual, CWColormap | CWBackPixel | CWBorderPixel, &xattr);
 	}
+
 	long events = ExposureMask | StructureNotifyMask | KeyPressMask;	// expose and key events
 	events |= ButtonPressMask | ButtonReleaseMask | PointerMotionMask;	// mouse events
 	XSelectInput(dpy, win, events);
-
+		
 	// set WM cooperation settings
 	Atom wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", True);
 	XSetWMProtocols(dpy, win, &wm_delete, 1);
@@ -247,12 +278,12 @@ void fxwt::destroy_graphics() {
 	glXDestroyContext(fxwt_x_dpy, glx_ctx);
 	XDestroyWindow(fxwt_x_dpy, fxwt_x_win);
 
-	/*
+#ifdef USE_XF86VIDMODE
 	if(fullscreen) {
-		XF86VidModeSwitchToMode(dpy, DefaultScreen(dpy), &orig_mode);
-		XF86VidModeSetViewPort(dpy, DefaultScreen(dpy), 0, 0);
+		XF86VidModeSwitchToMode(fxwt_x_dpy, DefaultScreen(fxwt_x_dpy), &orig_mode);
+		XF86VidModeSetViewPort(fxwt_x_dpy, DefaultScreen(fxwt_x_dpy), 0, 0);
 	}
-	*/
+#endif	// USE_XF86VIDMODE
 	
 	XCloseDisplay(fxwt_x_dpy);
 }

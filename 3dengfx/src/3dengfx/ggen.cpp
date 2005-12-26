@@ -33,6 +33,35 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #define GGEN_SOURCE
 #include "teapot.h"
+
+/* create_cube - (JT)
+ * creates a subdivided cube
+ */
+void create_cube(TriMesh *mesh, scalar_t size, int subdiv) {
+	TriMesh tmp;
+	Matrix4x4 mat;
+
+	Vector3 face_vec[] = {
+		Vector3(0, 0, -1),
+		Vector3(1, 0, 0),
+		Vector3(0, 0, 1),
+		Vector3(-1, 0, 0),
+		Vector3(0, 1, 0),
+		Vector3(0, -1, 0)
+	};
+
+	for(int i=0; i<6; i++) {
+		create_plane(i ? &tmp : mesh, face_vec[i], Vector2(size, size), subdiv);
+		mat.set_translation(face_vec[i] * (size / 2.0));
+
+		if(i) {
+			tmp.apply_xform(mat);
+			join_tri_mesh(mesh, mesh, &tmp);
+		} else {
+			mesh->apply_xform(mat);
+		}
+	}
+}
  
 /* CreatePlane - (JT)
  * creates a planar mesh of arbitrary subdivision

@@ -80,6 +80,8 @@ public:
 	void add_curve(Curve *curve);
 	void add_particle_sys(ParticleSystem *p);
 
+	void add_skycube(scalar_t size, Texture *cubemap);
+
 	bool remove_light(const Light *light);
 	bool remove_object(const Object *obj);
 	bool remove_particle_sys(const ParticleSystem *p);

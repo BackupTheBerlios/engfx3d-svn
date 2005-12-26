@@ -160,8 +160,6 @@ GraphicsInitParameters *load_graphics_context_config(const char *fname) {
 	gip.stencil_bits = 8;
 	gip.dont_care_flags = 0;
 
-	set_verbosity(2);
-	
 	if(load_config_file(fname) == -1) {
 		error("%s: could not load config file", __func__);
 		return 0;
@@ -259,7 +257,9 @@ SysCaps get_system_capabilities() {
 		cptr++;
 	}
 
+	set_verbosity(2);
 	info("Supported extensions:\n-------------\n%s", ext_str);
+	set_verbosity(3);
 		
 	info("Rendering System Information:");
 
@@ -381,11 +381,7 @@ bool create_graphics_context(const GraphicsInitParameters &gip) {
 	
 	gparams = gip;
 
-	if(remove(get_log_filename()) != 0) {
-		std::cerr << "failed to remove log: " << get_log_filename() << "\n";
-	}
-
-	set_verbosity(2);
+	remove(get_log_filename());
 
 	if(!fxwt::init_graphics(&gparams)) {
 		return false;
@@ -512,7 +508,6 @@ bool start_gl() {
 	}
 
 	gc_valid = true;
-	set_verbosity(3);
 	
 	set_default_states();
 	return true;

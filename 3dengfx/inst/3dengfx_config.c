@@ -2,9 +2,6 @@
 #include <string.h>
 #include "3dengfx_config.h"
 
-#define CFLAGS	"pkg-config --cflags freetype2"
-#define LIBS	"pkg-config --libs freetype2"
-
 #if GFX_LIBRARY == SDL
 #define GFX_CFLAGS	"sdl-config --cflags"
 #define GFX_LIBS	"sdl-config --libs"
@@ -16,7 +13,13 @@
 #elif GFX_LIBRARY == NATIVE
 #if NATIVE_LIB == NATIVE_X11
 #define GFX_CFLAGS	"echo '-I/usr/X11R6/include -I/usr/include/X11'"
+
+#ifdef USE_XF86VIDMODE
+#define GFX_LIBS	"echo '-L/usr/X11R6/lib -lX11 -lXext -lXxf86vm'"
+#else
 #define GFX_LIBS	"echo '-L/usr/X11R6/lib -lX11 -lXext'"
+#endif	// USE_XF86VIDMODE
+
 #elif NATIVE_LIB == NATIVE_WIN32
 /* ? */
 #endif
@@ -38,6 +41,14 @@
 #else
 #define LD_JPEG	""
 #endif	/* IMGLIB_NO_JPEG */
+
+#ifndef FXWT_NO_FREETYPE
+#define FT_CFLAGS	"pkg-config --cflags freetype2"
+#define FT_LIBS		"pkg-config --libs freetype2"
+#else
+#define FT_CFLAGS	"echo ''"
+#define FT_LIBS		"echo ''"
+#endif	/* freetype */
 
 void print_cflags(void);
 void print_libs(void);
@@ -94,7 +105,7 @@ void print_cflags(void) {
 		pclose(p);
 	}
 
-	if((p = popen(CFLAGS, "r"))) {
+	if((p = popen(FT_CFLAGS, "r"))) {
 		while((c = fgetc(p)) != -1) putchar(c);
 		putchar(' ');
 		pclose(p);
@@ -120,7 +131,7 @@ void print_libs_no_3dengfx(void) {
 		pclose(p);
 	}
 
-	if((p = popen(LIBS, "r"))) {
+	if((p = popen(FT_LIBS, "r"))) {
 		while((c = fgetc(p)) != -1) putchar(c);
 		putchar(' ');
 		pclose(p);

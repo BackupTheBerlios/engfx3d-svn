@@ -135,6 +135,32 @@ void Scene::add_particle_sys(ParticleSystem *p) {
 	psys.push_back(p);
 }
 
+/* adds a cubemapped skycube, by creating a cube with the correct
+ * texture coordinates to map into the cubemap texture.
+ */
+void Scene::add_skycube(scalar_t size, Texture *cubemap) {
+	Object *obj = new ObjCube(size, 4);
+	obj->get_mesh_ptr()->invert_winding();
+
+	// generate appropriate texture coordinates
+	unsigned int vcount = obj->get_vertex_count();
+	Vertex *vptr = obj->get_mod_vertex_data();
+
+	for(unsigned int i=0; i<vcount; i++) {
+		Vector3 vpos = vptr->pos.normalized();
+		(vptr++)->tex[0] = TexCoord(vpos.x, -vpos.y, vpos.z);
+	}
+
+	// setup material parameters
+	Material *mat = obj->get_material_ptr();
+	mat->ambient_color = mat->diffuse_color = mat->specular_color = 0.0;
+	mat->emissive_color = 1.0;
+	mat->set_texture(cubemap, TEXTYPE_DIFFUSE);
+
+	obj->set_texture_addressing(TEXADDR_CLAMP);
+
+	add_object(obj);
+}
 
 bool Scene::remove_light(const Light *light) {
 	int idx;
@@ -510,12 +536,24 @@ bool Scene::render_all_cube_maps(unsigned long msec) const {
 		RenderParams rp = obj->get_render_params();
 		if(rp.hidden) continue;
 
-		if(mat->auto_refl) {
-			if(mat->auto_refl_upd > 1 && frame_count % mat->auto_refl_upd) continue;
-		} else {
-			if(!first_render) continue;
+		// if it is marked as a non-automatically updated reflection map, skip it.
+		if(!mat->auto_refl) {
+			continue;
+		}
+
+		// if auto-reflect is set for updating every nth frame,
+		// and this is not one of them, skip it.
+		if(mat->auto_refl_upd > 1 && frame_count % mat->auto_refl_upd) {
+			continue;
 		}
 		
+		// if auto-reflect is set to update only during the first frame,
+		// and this is not the first frame, skip it.
+		if(mat->auto_refl_upd == 0 && !first_render) {
+			continue;
+		}
+		
+		// ... otherwise, update the reflection in the cubemap.
 		if((env = mat->get_texture(TEXTYPE_ENVMAP))) {
 			if(env->get_type() == TEX_CUBE) {
 				did_some = true;

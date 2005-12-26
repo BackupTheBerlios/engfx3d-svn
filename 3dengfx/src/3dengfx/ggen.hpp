@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "gfx/3dgeom.hpp"
 
 // basic primitives
+void create_cube(TriMesh *mesh, scalar_t size, int subdiv);
 void create_plane(TriMesh *mesh, const Vector3 &normal, const Vector2 &size, int subdiv);
 void create_cylinder(TriMesh *mesh, scalar_t rad, scalar_t len, bool caps, int udiv, int vdiv);
 void create_sphere(TriMesh *mesh, scalar_t radius, int subdiv);

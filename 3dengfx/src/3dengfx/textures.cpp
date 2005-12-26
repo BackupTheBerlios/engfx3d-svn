@@ -80,6 +80,9 @@ Texture::Texture(int x, TextureDim type) {
 	add_frame(undef_pbuf);
 }
 		
+Texture::~Texture() {
+	// TODO: check if it's destroyed between a lock/unlock and free image data
+}
 
 void Texture::add_frame() {
 	glGenTextures(1, &tex_id);
