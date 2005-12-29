@@ -102,12 +102,13 @@ void set_texture_filtering(int tex_unit, TextureFilteringType tex_filter);
 void set_texture_addressing(int tex_unit, TextureAddressing uaddr, TextureAddressing vaddr);
 void set_texture_border_color(int tex_unit, const Color &color);
 void set_texture(int tex_unit, const Texture *tex);
-//void set_texture_factor(dword factor);
+//void set_texture_factor(unsigned int factor);
 void set_mip_mapping(bool enable);
 void set_material(const Material &mat);
 void use_vertex_colors(bool enable);
 
 void set_render_target(Texture *tex, CubeMapFace cube_map_face = CUBE_MAP_PX);
+void copy_texture(Texture *tex, bool full_screen = false);
 
 // multitexturing interface
 void select_texture_unit(int tex_unit);

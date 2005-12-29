@@ -43,6 +43,7 @@ static int execute_script(DemoScript *ds, unsigned long time);
 
 Texture *dsys::tex[4];
 unsigned int dsys::rtex_size_x, dsys::rtex_size_y;
+Matrix4x4 dsys::tex_mat[4];
 
 static BSTree<Part*> parts;
 static BSTree<Part*> running;
@@ -72,9 +73,22 @@ bool dsys::init() {
 	rtex_size_x = best_tex_size(scrx);
 	rtex_size_y = best_tex_size(scry);
 
+	int next_size_x = rtex_size_x * 2;
+	int next_size_y = rtex_size_y * 2;
+
+	info("allocating dsys render targets:");
+
 	for(int i=0; i<4; i++) {
-		tex[i] = new Texture(rtex_size_x, rtex_size_y);
+		int x = i ? rtex_size_x : next_size_x;
+		int y = i ? rtex_size_y : next_size_y;
+		tex[i] = new Texture(x, y);
+		info("  %d - %dx%d", i, x, y);
 	}
+
+	tex_mat[0].set_scaling(Vector3((float)scrx / (float)next_size_x, (float)scry / (float)next_size_y, 1));
+	tex_mat[1] = Matrix4x4::identity_matrix;
+	tex_mat[2] = Matrix4x4::identity_matrix;
+	tex_mat[3] = Matrix4x4::identity_matrix;
 
 	strcpy(script_fname, "demoscript");
 
@@ -88,6 +102,11 @@ void dsys::clean_up() {
 		if(tex[i]) delete tex[i];
 		tex[i] = 0;
 	}
+}
+
+void dsys::use_rt_tex(RenderTarget rt) {
+	set_texture(0, tex[rt]);
+	set_matrix(XFORM_TEXTURE, tex_mat[rt]);
 }
 
 void dsys::set_demo_script(const char *fname) {

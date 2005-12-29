@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "gfx/image.h"
 #include "common/config_parser.h"
 #include "common/err_msg.h"
+#include "dsys/dsys.hpp"
 
 using std::cout;
 using std::cerr;
@@ -395,10 +396,12 @@ bool create_graphics_context(const GraphicsInitParameters &gip) {
 
 #if GFX_LIBRARY == GTK
 	fxwt::init();
+	dsys::init();
 	return true;
 #else
 	if(!start_gl()) return false;
 	fxwt::init();
+	dsys::init();
 	return true;
 #endif	// GTK
 }
@@ -1028,6 +1031,16 @@ void set_render_target(Texture *tex, CubeMapFace cube_map_face) {
 	}
 }
 
+void copy_texture(Texture *tex, bool full_screen) {
+	if(!tex) return;
+
+	int width = full_screen ? get_graphics_init_parameters()->x : tex->width;
+	int height = full_screen ? get_graphics_init_parameters()->y : tex->height;
+
+	set_texture(0, tex);
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
+}
+
 // multitexturing interface
 
 void select_texture_unit(int tex_unit) {
@@ -1216,7 +1229,7 @@ bool screen_capture(char *fname, enum image_file_format fmt) {
 	int x = gparams.x;
 	int y = gparams.y;
 
-	unsigned long *pixels = new unsigned long[x * y];
+	uint32_t *pixels = new uint32_t[x * y];
 	glReadPixels(0, 0, x, y, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
 	
 	if(!fname) {

@@ -721,6 +721,8 @@ void create_teapot(TriMesh *mesh, scalar_t size, int subdiv)
 	
 	create_bezier_mesh(mesh, vertices, patches, teapot_num_patches, subdiv);
 
+	mesh->calculate_normals();
+
 	// cleanup
 	delete [] patches;
 	delete [] vertices;

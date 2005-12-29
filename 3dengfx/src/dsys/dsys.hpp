@@ -26,15 +26,18 @@ namespace dsys {
 
 	class Part;
 
-	// note: the order in this enum is IMPORTANT, do not shuffle around
+	// NOTE: the order in this enum is IMPORTANT, do not shuffle around
 	enum RenderTarget {RT_TEX0, RT_TEX1, RT_TEX2, RT_TEX3, RT_FB};
 
 	// the texture targets
 	extern Texture *tex[4];
 	extern unsigned int rtex_size_x, rtex_size_y;
+	extern Matrix4x4 tex_mat[4];
 
 	bool init();
 	void clean_up();
+
+	void use_rt_tex(RenderTarget rt);
 
 	void set_demo_script(const char *fname);
 

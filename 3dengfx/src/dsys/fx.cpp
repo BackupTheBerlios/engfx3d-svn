@@ -143,6 +143,14 @@ void dsys::overlay(Texture *tex, const Vector2 &corner1, const Vector2 &corner2,
 		set_texture_coord_index(0, 0);
 		set_texture(0, tex);
 		set_texture_addressing(0, TEXADDR_CLAMP, TEXADDR_CLAMP);
+
+		for(int i=0; i<4; i++) {
+			if(tex == dsys::tex[i]) {
+				glMatrixMode(GL_TEXTURE);
+				load_matrix_gl(dsys::tex_mat[i]);
+				break;
+			}
+		}
 	}
 
 	if(pprog) {

@@ -434,9 +434,10 @@ void TriMesh::calculate_normals_by_index() {
 			normal += tarray.get_data()[tri_indices[i][j]].normal;
 		}
 		
-		// avoid division with zero
-		if (tri_indices[i].size())
+		// avoid division by zero
+		if(tri_indices[i].size()) {
 			normal.normalize();
+		}
 		varray.get_mod_data()[i].normal = normal;
 	}
 	
@@ -520,6 +521,39 @@ void TriMesh::invert_winding() {
 	}
 }
 
+
+void TriMesh::calculate_tangents() {
+	// precalculate which triangles index each vertex
+	std::vector<unsigned int> *tri_indices;
+	tri_indices = new std::vector<unsigned int>[varray.get_count()];
+
+	for(unsigned int i=0; i<tarray.get_count(); i++) {
+		for(int j=0; j<3; j++) {	
+			tri_indices[tarray.get_data()[i].vertices[j]].push_back(i);
+		}
+	}
+
+	// calculate the triangle tangents
+	for(unsigned int i=0; i<tarray.get_count(); i++) {
+		tarray.get_mod_data()[i].calculate_tangent(varray.get_data(), false);
+	}
+	
+	// now calculate the vertex tangents
+	for(unsigned int i=0; i<varray.get_count(); i++) {
+		Vector3 tangent;
+		for(unsigned int j=0; j<(unsigned int)tri_indices[i].size(); j++) {
+			tangent += tarray.get_data()[tri_indices[i][j]].tangent;
+		}
+		
+		// avoid division by zero
+		if(tri_indices[i].size()) {
+			tangent.normalize();
+		}
+		varray.get_mod_data()[i].tangent = tangent;
+	}
+	
+	delete [] tri_indices;
+}
 
 void TriMesh::apply_xform(const Matrix4x4 &xform) {
 	Vertex *vptr = varray.get_mod_data();

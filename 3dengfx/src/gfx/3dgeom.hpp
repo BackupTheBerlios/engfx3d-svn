@@ -53,6 +53,7 @@ class Vertex {
 public:
 	Vector3 pos;
 	Vector3 normal;
+	Vector3 tangent;
 	Color color;
 	TexCoord tex[2];
 
@@ -225,6 +226,8 @@ public:
 	void calculate_normals();
 	void normalize_normals();
 	void invert_winding();
+
+	void calculate_tangents();
 
 	void apply_xform(const Matrix4x4 &xform);
 
