@@ -517,6 +517,7 @@ bool start_gl() {
 }
 
 void destroy_graphics_context() {
+	dsys::clean_up();
 	if(!gc_valid) return;
 	gc_valid = false;
 	info("3d engine shutting down...");
