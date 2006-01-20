@@ -1,10 +1,18 @@
 obj :=
 
-CC := i586-mingw32msvc-gcc
-CXX := i586-mingw32msvc-g++
-AR := i586-mingw32msvc-ar
+# set the compiler's prefix
+#prefix := i586-mingw32msvc-
+prefix :=
 
-opt := -O3 -ffast-math -march=pentium4
+# choose processor
+#processor := -march=pentium4
+processor :=
+
+CC := $(prefix)gcc
+CXX := $(prefix)g++
+AR := $(prefix)ar
+
+opt := -O3 -ffast-math $(processor)
 #opt := -g
 inc_flags := -Isrc -Ilibs -I/usr/local/include
 

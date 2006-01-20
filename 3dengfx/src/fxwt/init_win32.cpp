@@ -58,10 +58,63 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	RegisterClassEx(&wc);
 
-	unsigned long style = WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-	win = CreateWindow("win32_sucks_big_time", "3dengfx/win32", style, 0, 0, gparams->x, gparams->y, 0, 0, pid, 0);
+	//unsigned long style = WS_OVERLAPPEDWINDOW /*| WS_VISIBLE*/ | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+	
+	unsigned long desktop_w = GetSystemMetrics(SM_CXSCREEN);
+	unsigned long desktop_h = GetSystemMetrics(SM_CYSCREEN);
+	
+	unsigned long style, width, height;
+	if (gparams->fullscreen)
+	{
+		width = desktop_w;
+		height = desktop_h;
+		style = WS_POPUP;
+	}
+	else
+	{
+		width = gparams->x;
+		height = gparams->y;
+		style = WS_OVERLAPPED | WS_SYSMENU;
+	}
+	
+	
+	win = CreateWindow("win32_sucks_big_time", "3dengfx/win32", 
+			style, 
+			0, 0, 
+			width, height, 
+			0, 0, pid, 0);
 	dc = GetDC(win);
 
+	// decide window placement
+	// if the window is smaller than the desktop, center 
+	// the window in the desktop
+	unsigned long placement_x = 0;
+	unsigned long placement_y = 0;
+	
+	if (gparams->x < desktop_w)
+		placement_x = (desktop_w - gparams->x) / 2;
+	if (gparams->y < desktop_h)
+		placement_y = (desktop_h - gparams->y) / 2;
+
+	// adjust window size to make the client area big enough
+	// to fit the framebuffer
+	RECT client_rect;
+	GetClientRect(win, &client_rect);
+
+	unsigned long new_width = gparams->x + (gparams->x - client_rect.right);
+	unsigned long new_height = gparams->y + (gparams->y - client_rect.bottom);
+	
+	if (!gparams->fullscreen)
+	{
+		MoveWindow(win, placement_x, placement_y,
+					new_width, new_height, false);
+	}
+
+	// show the window
+	ShowWindow(win, SW_SHOW);
+	UpdateWindow(win);
+	SetFocus(win);
+	
 	// determine color bits
 	int color_bits;
 	if(gparams->dont_care_flags & DONT_CARE_BPP) {

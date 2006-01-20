@@ -21,7 +21,9 @@
 #endif	// USE_XF86VIDMODE
 
 #elif NATIVE_LIB == NATIVE_WIN32
-/* ? */
+#define GFX_CFLAGS	"echo '-mwindows'"
+#define GFX_LIBS	"echo '-lopengl32'"
+
 #endif
 
 #elif GFX_LIBRARY == GLUT

@@ -114,6 +114,15 @@ long CALLBACK fxwt_win32_handle_event(HWND__ *win, unsigned int msg, unsigned in
 		}
 		break;
 
+	case WM_CHAR:
+		{
+			list<void (*)(int)>::iterator iter = keyb_handlers.begin();
+			while(iter != keyb_handlers.end()) {
+				(*iter++)(wparam);
+			}
+		}
+		break;
+
 	case WM_MOUSEMOVE:
 		{
 			list<void (*)(int, int)>::iterator iter = motion_handlers.begin();
@@ -156,10 +165,11 @@ long CALLBACK fxwt_win32_handle_event(HWND__ *win, unsigned int msg, unsigned in
 
 
 	default:
-		DefWindowProc(win, msg, wparam, lparam);
+		break;
+	//	DefWindowProc(win, msg, wparam, lparam);
 	}
 
-	return 0;
+	return DefWindowProc(win, msg, wparam, lparam);
 }
 
 static void button_event(int bn, bool state, int x, int y) {
@@ -171,7 +181,58 @@ static void button_event(int bn, bool state, int x, int y) {
 }
 
 static int vkey_to_keysym(unsigned int vkey) {
-	return 0xff << 8 | (vkey & 0xff);
+	//return 0xff00 | (vkey & 0xff);
+	//return vkey;
+	
+	// just make sure we dont return any chars. WM_CHAR
+	// will take care of that
+	if ( (vkey>=0x30 && vkey<=0x39) || (vkey>=0x41 && vkey<=0x5A) )
+		return 100000;
+	
+	/* Arrows + Home/End pad */
+	if (vkey == 37) return KEY_LEFT;
+	if (vkey == 38) return KEY_UP;
+	if (vkey == 39) return KEY_RIGHT;
+	if (vkey == 40) return KEY_DOWN;	
+	if (vkey == 36) return KEY_HOME;
+	if (vkey == 35) return KEY_END;
+	if (vkey == 33) return KEY_PAGEUP;
+	if (vkey == 34) return KEY_PAGEDOWN;
+	
+	/* Numeric keypad  - numbers*/
+	if (vkey>=96 && vkey<=105)
+		return vkey + 160;
+
+	/* Numeric keypad - symbols */
+	if (vkey == 111) return KEY_KP_DIVIDE;
+	if (vkey == 106) return KEY_KP_MULTIPLY;
+	if (vkey == 109) return KEY_KP_MINUS;
+	if (vkey == 107) return KEY_KP_PLUS;
+	if (vkey == 144) return KEY_NUMLOCK;
+		
+	/* Function keys */
+	if (vkey>=112 && vkey<=126)
+		return vkey + 170;
+	
+	/* Key state modifier keys */
+	if (vkey == 20)	return KEY_CAPSLOCK;
+	if (vkey == 145) return KEY_SCROLLOCK;
+	if (vkey == 16) return KEY_LSHIFT;
+	if (vkey == 17) return KEY_LCTRL;
+	// if (vkey == ???) return KEY_LALT;
+	if (vkey == 91) return KEY_LSUPER;
+	if (vkey == 92) return KEY_RSUPER;
+
+	if (vkey == 8) return KEY_BACKSPACE;
+	if (vkey == 9) return KEY_TAB;
+	if (vkey == 12) return KEY_CLEAR;
+	if (vkey == 13) return KEY_RETURN;
+	if (vkey == 19) return KEY_PAUSE;
+	if (vkey == 27) return KEY_ESCAPE;
+	if (vkey == 128) return KEY_DELETE;
+	
+	// return meaningless key
+	return 100000;
 }
 
 #endif	// GFX_LIBRARY == NATIVE && NATIVE_LIB == NATIVE_WIN32

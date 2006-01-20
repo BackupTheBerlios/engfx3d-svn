@@ -93,7 +93,7 @@ static Font font_style_list[3][4] = {
 #define VERDANA_FILE			"Verdana.ttf"
 #define TIMES_NEW_ROMAN_FILE	"Times_New_Roman.ttf"
 #define COURIER_NEW_FILE		"Courier_New.ttf"
-#elif defined(WIN32)
+#elif defined(WIN32) || defined(__WIN32__)
 #define VERDANA_FILE			"verdana.ttf"
 #define TIMES_NEW_ROMAN_FILE	"times.ttf"
 #define COURIER_NEW_FILE		"cour.ttf"
