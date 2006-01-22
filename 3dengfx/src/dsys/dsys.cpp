@@ -21,6 +21,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "3dengfx_config.h"
 
 #include <iostream>
+#include <string>
+#include <map>
 #include "dsys.hpp"
 #include "part.hpp"
 #include "fx.hpp"
@@ -29,7 +31,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "3dengfx/3dengfx.hpp"
 #include "n3dmath2/n3dmath2.hpp"
 #include "common/timer.h"
-#include "common/bstree.hpp"
 #include "common/err_msg.h"
 
 #if defined(__unix__) || defined(unix)
@@ -37,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #endif	// unix
 
 using namespace dsys;
-using std::cerr;
+using namespace std;
 
 static int execute_script(DemoScript *ds, unsigned long time);
 
@@ -45,8 +46,9 @@ Texture *dsys::tex[4];
 unsigned int dsys::rtex_size_x, dsys::rtex_size_y;
 Matrix4x4 dsys::tex_mat[4];
 
-static BSTree<Part*> parts;
-static BSTree<Part*> running;
+typedef map<string, Part*> PartTree;
+static PartTree parts;
+static PartTree running;
 
 static ntimer timer;
 
@@ -120,40 +122,37 @@ unsigned long dsys::get_demo_time() {
 
 
 void dsys::add_part(Part *part) {
-	parts.insert(part);
+	if(!part->get_name()) {
+		error("dsys::add_part - trying to add a nameless part...");
+		return;
+	}
+	parts[string(part->get_name())] = part;
 }
 
 void dsys::remove_part(Part *part) {
-	parts.remove(part);
+	PartTree::iterator iter = parts.find(part->get_name());
+	parts.erase(iter);
 }
 
 void dsys::start_part(Part *part) {
-	running.insert(part);
+	running[part->get_name()] = part;
 	part->start();
 }
 
 void dsys::stop_part(Part *part) {
 	part->stop();
-	running.remove(part);
+	PartTree::iterator iter = parts.find(part->get_name());
+	running.erase(iter);
 }
 
-class _KeyPart : public dsys::Part {
-protected:
-	virtual void draw_part() {}	// must implement the pure virtuals of the parent
-};
-
 Part *dsys::get_part(const char *pname) {
-	_KeyPart key;
-	key.set_name(pname);
-	BSTreeNode<Part*> *node = parts.find(&key);
-	return node ? node->data : 0;
+	PartTree::iterator iter = parts.find(pname);
+	return iter != parts.end() ? iter->second : 0;
 }
 
 Part *dsys::get_running(const char *pname) {
-	_KeyPart key;
-	key.set_name(pname);
-	BSTreeNode<Part*> *node = running.find(&key);
-	return node ? node->data : 0;
+	PartTree::iterator iter = running.find(pname);
+	return iter != running.end() ? iter->second : 0;
 }
 
 
@@ -208,8 +207,8 @@ void dsys::end_demo() {
 }
 
 
-static void update_node(BSTreeNode<Part*> *node) {
-	node->data->update_graphics();
+static void update_node(const pair<string, Part*> &p) {
+	p.second->update_graphics();
 }
 
 int dsys::update_graphics() {
@@ -231,7 +230,7 @@ int dsys::update_graphics() {
 	clear(Color(0.0f, 0.0f, 0.0f));
 	clear_zbuffer_stencil(1.0f, 0);
 	
-	running.traverse(update_node, TRAVERSE_INORDER);
+	for_each(running.begin(), running.end(), update_node);
 
 	// apply any post effects
 	apply_image_fx(time);
