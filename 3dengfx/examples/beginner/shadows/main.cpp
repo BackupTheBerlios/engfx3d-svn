@@ -78,7 +78,7 @@ bool init() {
 	scene->add_object(obj);
 	obj->set_shadow_casting(false);
 
-	Object *tea = new ObjTeapot(1.0, 2);
+	Object *tea = new ObjTeapot(1.0, 4);
 	tea->calculate_normals();
 	tea->set_shadow_casting(true);
 	scene->add_object(tea);

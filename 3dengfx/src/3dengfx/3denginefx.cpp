@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <iostream>
 #include <list>
+#include <cstdlib>
 #include <csignal>
 #include "opengl.h"
 #include "fxwt/fxwt.hpp"
@@ -280,7 +281,7 @@ SysCaps get_system_capabilities() {
 	sys_caps.vertex_buffers = (bool)strstr(ext_str, "GL_ARB_vertex_buffer_object");
 	sys_caps.depth_texture = (bool)strstr(ext_str, "GL_ARB_depth_texture");
 	sys_caps.shadow_mapping = (bool)strstr(ext_str, "GL_ARB_shadow");
-	sys_caps.point_sprites = (bool)strstr(ext_str, "GL_ARB_point_sprites");
+	sys_caps.point_sprites = (bool)strstr(ext_str, "GL_ARB_point_sprite");
 	sys_caps.point_params = (bool)strstr(ext_str, "GL_ARB_point_parameters");
 	glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &sys_caps.max_texture_units);
 	glGetIntegerv(GL_MAX_LIGHTS, &sys_caps.max_lights);
@@ -372,7 +373,7 @@ static const char *signame(int sig) {
 static void signal_handler(int sig) {
 	error("It seems this is the end... caught %s, exiting...\n", signame(sig));
 	destroy_graphics_context();
-	exit(-1);
+	exit(EXIT_FAILURE);
 }
 
 /* ---- create_graphics_context() ----

@@ -16,7 +16,7 @@ void key_handler(int key);
 
 GraphicsInitParameters *gip;
 Scene *scene;
-const float height = 5.0;
+float height = 5.0;
 int seed = -1;
 float roughness = 0.1;
 int iter = 400;
@@ -36,6 +36,12 @@ int main(int argc, char **argv) {
 			case 'r':
 				if(isdigit(argv[++i][0])) {
 					roughness = atof(argv[i]);
+				}
+				break;
+
+			case 'y':
+				if(isdigit(argv[++i][0])) {
+					height = atof(argv[i]);
 				}
 				break;
 
@@ -103,6 +109,8 @@ bool init() {
 	// add a light
 	Light *lt = new PointLight(Vector3(-20, 100, 200));
 	scene->add_light(lt);
+
+	scene->set_ambient_light(0.2);
 
 	// create the landscape object.
 	Object *obj = new Object;

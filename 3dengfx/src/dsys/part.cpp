@@ -104,5 +104,7 @@ void Part::update_graphics() {
 }
 
 bool Part::operator <(const Part &part) const {
+	if(!name) return true;
+	if(!part.name) return false;
 	return strcmp(name, part.name) < 0;
 }

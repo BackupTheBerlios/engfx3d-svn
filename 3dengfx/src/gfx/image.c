@@ -1,7 +1,6 @@
 /*
-Copyright 2004 John Tsiombikas <nuclear@siggraph.org>
-
 This is a small image library.
+Copyright (C) 2004 John Tsiombikas <nuclear@siggraph.org>
 
 This library is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -115,6 +114,8 @@ int save_image(const char *fname, void *pixels, unsigned long xsz, unsigned long
 		fprintf(stderr, "Image saving error: error saving %s, invalid format specification", fname);
 		break;
 	}
+
+	fclose(fp);
 	
 	return 0;
 }
