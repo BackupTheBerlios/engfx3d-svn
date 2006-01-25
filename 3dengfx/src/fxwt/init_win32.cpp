@@ -39,6 +39,9 @@ HWND__ *fxwt_win32_win;
 HDC__ *fxwt_win32_dc;
 static HGLRC__ *wgl_ctx;
 
+static bool win32_video_mode_switch(int width, int height, int bpp);
+static void win32_reset_video_mode();
+
 bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 	HWND__ *win;
 	HDC__ *dc;
@@ -64,16 +67,23 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 	unsigned long desktop_h = GetSystemMetrics(SM_CYSCREEN);
 	
 	unsigned long style, width, height;
+	width = gparams->x;
+	height = gparams->y;
 	if (gparams->fullscreen)
 	{
+		/*
 		width = desktop_w;
 		height = desktop_h;
 		style = WS_POPUP;
+		*/
+		
+		// try to change display mode
+		style = WS_POPUP;
+		if (!win32_video_mode_switch(gparams->x, gparams->y, 32))
+			return false;
 	}
 	else
 	{
-		width = gparams->x;
-		height = gparams->y;
 		style = WS_OVERLAPPED | WS_SYSMENU;
 	}
 	
@@ -206,6 +216,47 @@ void fxwt::destroy_graphics() {
 	wglDeleteContext(wgl_ctx);
 	ReleaseDC(fxwt_win32_win, fxwt_win32_dc);
 	DestroyWindow(fxwt_win32_win);
+
+	info("Resetting video mode");
+	win32_reset_video_mode();
+}
+
+static bool win32_video_mode_switch(int width, int height, int bpp)
+{
+	// enumerate display modes
+	std::vector<DEVMODE> modes;
+	DEVMODE curr_mode;
+	curr_mode.dmSize = sizeof(DEVMODE);
+	
+	for (int i=0; ; i++)
+	{
+		if (! EnumDisplaySettings(0, i, &curr_mode))
+			break;
+		modes.push_back(curr_mode);
+	}
+
+	bool success = false;
+	for (int i=0; i<modes.size(); i++)
+	{
+		if (modes[i].dmBitsPerPel == bpp &&
+			modes[i].dmPelsWidth == width &&
+			modes[i].dmPelsHeight == height)
+		{
+			if (ChangeDisplaySettings(&modes[i], CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
+			{
+				success = true;
+				break;
+			}
+		}
+	}
+
+	return success;
+}
+
+// resets the video mode to the default mode in the registry
+static void win32_reset_video_mode()
+{
+	ChangeDisplaySettings(0, 0);
 }
 
 #endif	// GFX_LIBRARY == NATIVE && NATIVE_LIB == NATIVE_WIN32
