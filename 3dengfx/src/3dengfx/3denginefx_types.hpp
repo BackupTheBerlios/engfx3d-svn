@@ -168,6 +168,7 @@ struct SysCaps {
 	bool point_sprites;
 	bool point_params;
 	int max_texture_units;
+	bool non_power_of_two_textures;
 	int max_lights;
 	ProgCaps prog;
 };

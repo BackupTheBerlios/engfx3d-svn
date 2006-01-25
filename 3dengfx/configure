@@ -172,3 +172,4 @@ echo '#endif	/* _3DENGFX_CONFIG_H_ */' >>$cfg_file
 
 echo 'Creating 3dengfx-config program ...'
 cc -o 3dengfx-config inst/3dengfx_config.c -Isrc
+

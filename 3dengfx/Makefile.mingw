@@ -17,7 +17,7 @@ opt := -O3 -ffast-math $(processor)
 inc_flags := -Isrc -Ilibs -I/usr/local/include
 
 CXXFLAGS := $(opt) -ansi -pedantic -Wall $(inc_flags)
-CFLAGS := $(opt) -std=c89 -pedantic -Wall $(inc_flags)
+CFLAGS := $(opt) -std=c89 -pedantic -Wall $(inc_flags)i
 
 include src/3dengfx/Makefile-part
 include src/gfx/Makefile-part

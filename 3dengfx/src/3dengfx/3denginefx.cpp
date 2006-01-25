@@ -284,6 +284,7 @@ SysCaps get_system_capabilities() {
 	sys_caps.point_sprites = (bool)strstr(ext_str, "GL_ARB_point_sprite");
 	sys_caps.point_params = (bool)strstr(ext_str, "GL_ARB_point_parameters");
 	glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &sys_caps.max_texture_units);
+	sys_caps.non_power_of_two_textures = (bool)strstr(ext_str, "GL_ARB_texture_non_power_of_two");
 	glGetIntegerv(GL_MAX_LIGHTS, &sys_caps.max_lights);
 	
 	sys_caps.prog.asm_vertex = (bool)strstr(ext_str, "GL_ARB_vertex_program");
@@ -315,6 +316,7 @@ SysCaps get_system_capabilities() {
 	info("Point sprites: %s", sys_caps.point_sprites ? "yes" : "no");
 	info("Point parameters: %s", sys_caps.point_params ? "yes" : "no");
 	info("Texture units: %d", sys_caps.max_texture_units);
+	info("NPOT textures: %s", sys_caps.non_power_of_two_textures ? "yes" : "no");
 	info("Max lights: %d", sys_caps.max_lights);
 
 	if(!sys_caps.point_sprites && !sys_caps.point_params) {
