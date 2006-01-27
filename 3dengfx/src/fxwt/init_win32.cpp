@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* OpenGL through Win32
  *
  * Author: John Tsiombikas 2005
+ * modified: Mihalis Georgoulopoulos 2006
  */
 
 #include "3dengfx_config.h"
@@ -39,7 +40,7 @@ HWND__ *fxwt_win32_win;
 HDC__ *fxwt_win32_dc;
 static HGLRC__ *wgl_ctx;
 
-static bool win32_video_mode_switch(int width, int height, int bpp);
+static bool win32_video_mode_switch(int width, int height, int bpp, bool dontcare_bpp);
 static void win32_reset_video_mode();
 
 bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
@@ -70,16 +71,9 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 	width = gparams->x;
 	height = gparams->y;
 	if (gparams->fullscreen)
-	{
-		/*
-		width = desktop_w;
-		height = desktop_h;
+	{	
 		style = WS_POPUP;
-		*/
-		
-		// try to change display mode
-		style = WS_POPUP;
-		if (!win32_video_mode_switch(gparams->x, gparams->y, 32))
+		if (!win32_video_mode_switch(gparams->x, gparams->y, 32, (gparams->dont_care_flags & DONT_CARE_BPP)))
 			return false;
 	}
 	else
@@ -207,6 +201,9 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 	fxwt_win32_dc = dc;
 	fxwt_win32_win = win;
 
+	if (gparams->fullscreen)
+		ShowCursor(0);
+
 	return true;
 }
 
@@ -219,38 +216,47 @@ void fxwt::destroy_graphics() {
 
 	info("Resetting video mode");
 	win32_reset_video_mode();
+
+	ShowCursor(1);
 }
 
-static bool win32_video_mode_switch(int width, int height, int bpp)
+static bool win32_video_mode_switch(int width, int height, int bpp, bool dontcare_bpp)
 {
 	// enumerate display modes
 	std::vector<DEVMODE> modes;
 	DEVMODE curr_mode;
 	curr_mode.dmSize = sizeof(DEVMODE);
-	
+		
 	for (int i=0; ; i++)
 	{
 		if (! EnumDisplaySettings(0, i, &curr_mode))
 			break;
 		modes.push_back(curr_mode);
 	}
-
-	bool success = false;
+	
+	int best_mode = -1;
+	unsigned int best_bpp = 1;
+	if (!dontcare_bpp) best_bpp = bpp;
+	
 	for (int i=0; i<modes.size(); i++)
 	{
-		if (modes[i].dmBitsPerPel == bpp &&
-			modes[i].dmPelsWidth == width &&
+		if (modes[i].dmPelsWidth == width &&
 			modes[i].dmPelsHeight == height)
 		{
-			if (ChangeDisplaySettings(&modes[i], CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
+			if (modes[i].dmBitsPerPel >= best_bpp)
 			{
-				success = true;
-				break;
+				best_bpp = modes[i].dmBitsPerPel;
+				best_mode = i;
 			}
 		}
 	}
 
-	return success;
+	if (best_mode == -1) return false;
+	
+	if (ChangeDisplaySettings(&modes[best_mode], CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
+		return true;
+
+	return false;
 }
 
 // resets the video mode to the default mode in the registry

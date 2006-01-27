@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* main fxwt event handling and system abstraction.
  *
  * Author: John Tsiombikas 2004
+ * modified: Mihalis Georgoulopoulos 2006
  */
 
 #include "3dengfx_config.h"
@@ -180,59 +181,30 @@ static void button_event(int bn, bool state, int x, int y) {
 	}
 }
 
+
+static int win32_keysyms[] = 
+{
+//	0		1		2		3		4		5		6		7		8		9
+	0,		0,		0,		0,		0,		0,		0,		0,		8,		9,		// 000
+	0,		0,		12,		13,		0,		0,		304,	306,	0,		19,		// 010
+	301,	0,		0,		0,		0,		0,		0,		27,		0,		0,		// 020
+	0,		0,		0,		280,	281,	279,	278,	276,	273,	275,	// 030
+	274,	0,		0,		0,		0,		0,		0,		0,		0,		0,		// 040
+	0,		0,		0,		0,		0,		0,		0,		0,		0,		0,		// 050
+	0,		0,		0,		0,		0,		0,		0,		0,		0,		0,		// 060
+	0,		0,		0,		0,		0,		0,		0,		0,		0,		0,		// 070
+	0,		0,		0,		0,		0,		0,		0,		0,		0,		0,		// 080
+	0,		311,	312,	0,		0,		0,		256,	257,	258,	259,	// 090
+	260,	261,	262,	263,	264,	265,	268,	270,	0,		269,	// 100
+	0,		267,	282,	283,	284,	285,	286,	287,	288,	289,	// 110
+	290,	291,	292,	293,	294,	295,	296,	0,		127,	0,		// 120
+	0,		0,		0,		0,		0,		0,		0,		0,		0,		0,		// 130
+	0,		0,		0,		0,		300,	302,									// 140
+};
+
 static int vkey_to_keysym(unsigned int vkey) {
-	//return 0xff00 | (vkey & 0xff);
-	//return vkey;
-	
-	// just make sure we dont return any chars. WM_CHAR
-	// will take care of that
-	if ( (vkey>=0x30 && vkey<=0x39) || (vkey>=0x41 && vkey<=0x5A) )
-		return 100000;
-	
-	/* Arrows + Home/End pad */
-	if (vkey == 37) return KEY_LEFT;
-	if (vkey == 38) return KEY_UP;
-	if (vkey == 39) return KEY_RIGHT;
-	if (vkey == 40) return KEY_DOWN;	
-	if (vkey == 36) return KEY_HOME;
-	if (vkey == 35) return KEY_END;
-	if (vkey == 33) return KEY_PAGEUP;
-	if (vkey == 34) return KEY_PAGEDOWN;
-	
-	/* Numeric keypad  - numbers*/
-	if (vkey>=96 && vkey<=105)
-		return vkey + 160;
-
-	/* Numeric keypad - symbols */
-	if (vkey == 111) return KEY_KP_DIVIDE;
-	if (vkey == 106) return KEY_KP_MULTIPLY;
-	if (vkey == 109) return KEY_KP_MINUS;
-	if (vkey == 107) return KEY_KP_PLUS;
-	if (vkey == 144) return KEY_NUMLOCK;
-		
-	/* Function keys */
-	if (vkey>=112 && vkey<=126)
-		return vkey + 170;
-	
-	/* Key state modifier keys */
-	if (vkey == 20)	return KEY_CAPSLOCK;
-	if (vkey == 145) return KEY_SCROLLOCK;
-	if (vkey == 16) return KEY_LSHIFT;
-	if (vkey == 17) return KEY_LCTRL;
-	// if (vkey == ???) return KEY_LALT;
-	if (vkey == 91) return KEY_LSUPER;
-	if (vkey == 92) return KEY_RSUPER;
-
-	if (vkey == 8) return KEY_BACKSPACE;
-	if (vkey == 9) return KEY_TAB;
-	if (vkey == 12) return KEY_CLEAR;
-	if (vkey == 13) return KEY_RETURN;
-	if (vkey == 19) return KEY_PAUSE;
-	if (vkey == 27) return KEY_ESCAPE;
-	if (vkey == 128) return KEY_DELETE;
-	
-	// return meaningless key
-	return 100000;
+	if (vkey < 146) return win32_keysyms[vkey];
+	return 0;
 }
 
 #endif	// GFX_LIBRARY == NATIVE && NATIVE_LIB == NATIVE_WIN32

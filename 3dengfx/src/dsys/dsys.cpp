@@ -72,37 +72,40 @@ bool dsys::init() {
 	int scrx = get_graphics_init_parameters()->x;
 	int scry = get_graphics_init_parameters()->y;
 
+	int next_size_x, next_size_y;
+	
 	rtex_size_x = best_tex_size(scrx);
 	rtex_size_y = best_tex_size(scry);
-
-	int next_size_x, next_size_y;
-	if (engfx_state::sys_caps.non_power_of_two_textures)
-	{
-		next_size_x = scrx;
-		next_size_y = scry;
-	}
-	else
-	{
-		next_size_x = rtex_size_x * 2;
-		next_size_y = rtex_size_y * 2;
-	}
+	
+	next_size_x = rtex_size_x * 2;
+	next_size_y = rtex_size_y * 2;
 		
 	info("allocating dsys render targets:");
 
-	for(int i=0; i<4; i++) {
-		int x = i ? rtex_size_x : next_size_x;
-		int y = i ? rtex_size_y : next_size_y;
-		tex[i] = new Texture(x, y);
-		info("  %d - %dx%d", i, x, y);
-	}
+	if (!engfx_state::sys_caps.non_power_of_two_textures)
+	{
+		// make a high-res texture and 3 low-res
+		for(int i=0; i<4; i++) {
+			int x = i ? rtex_size_x : next_size_x;
+			int y = i ? rtex_size_y : next_size_y;
+			tex[i] = new Texture(x, y);
+			info("  %d - %dx%d", i, x, y);
+		}
 
-	if (engfx_state::sys_caps.non_power_of_two_textures)
-		tex_mat[0] = Matrix4x4::identity_matrix;
-	else
 		tex_mat[0].set_scaling(Vector3((float)scrx / (float)next_size_x, (float)scry / (float)next_size_y, 1));
-	tex_mat[1] = Matrix4x4::identity_matrix;
-	tex_mat[2] = Matrix4x4::identity_matrix;
-	tex_mat[3] = Matrix4x4::identity_matrix;
+		tex_mat[1] = Matrix4x4::identity_matrix;
+		tex_mat[2] = Matrix4x4::identity_matrix;
+		tex_mat[3] = Matrix4x4::identity_matrix;
+	}
+	else
+	{
+		for (int i=0; i<4; i++)
+		{
+			tex[i] = new Texture(scrx, scry);
+			info("  %d - %dx%d", i, scrx, scry);
+			tex_mat[i] = Matrix4x4::identity_matrix;
+		}
+	}
 
 	strcpy(script_fname, "demoscript");
 
