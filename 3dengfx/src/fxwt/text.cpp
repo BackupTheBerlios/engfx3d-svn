@@ -100,7 +100,7 @@ static Font font_style_list[3][4] = {
 #endif
 
 bool fxwt::text_init() {
-
+	
 	set_verbosity(2);
 
 	text_table.set_hash_function(string_hash);
@@ -158,10 +158,10 @@ int fxwt::get_font_size() {
 bool fxwt::set_font(Font fnt) {
 	for(size_t i=0; i<face_list.size(); i++) {
 		if(!strcmp(face_list[i]->family_name, font_names[fnt])) {
-			font = face_list[i];
+			font = face_list[i];	
 			return true;
 		}
-	}
+	}	
 	return false;
 }
 
@@ -327,15 +327,27 @@ static int next_pow_two(int num) {
 }
 
 static Texture *pixel_buf_to_texture(const PixelBuffer &pbuf) {
-	int w = next_pow_two(pbuf.width);
-	int h = next_pow_two(pbuf.height);
 
-	PixelBuffer tmp = pbuf;
+	int w, h;
+	Texture *tex;
+	
+	if (engfx_state::sys_caps.non_power_of_two_textures)
+	{
+		w = pbuf.width;
+		h = pbuf.height;
+		tex = new Texture(w, h);
+		tex->set_pixel_data(pbuf);
+	}
+	else
+	{
+		w = next_pow_two(pbuf.width);
+		h = next_pow_two(pbuf.height);
+		PixelBuffer tmp = pbuf;
+		resample_pixel_buffer(&tmp, w, h);
+		tex = new Texture(w, h);
+		tex->set_pixel_data(tmp);
+	}
 
-	resample_pixel_buffer(&tmp, w, h);
-
-	Texture *tex = new Texture(w, h);
-	tex->set_pixel_data(tmp);
 	/*tex->lock();
 
 	float dx = (float)pbuf.width / (float)w;

@@ -110,7 +110,7 @@ bool dsys::init() {
 	strcpy(script_fname, "demoscript");
 
 	cmd::register_commands();
-
+	
 	return true;
 }
 
