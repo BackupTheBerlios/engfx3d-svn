@@ -91,6 +91,7 @@ private:
 public:
 	Object();
 	Object(const TriMesh &mesh);
+	~Object();
 	
 	void set_mesh(const TriMesh &mesh);
 	TriMesh *get_mesh_ptr();

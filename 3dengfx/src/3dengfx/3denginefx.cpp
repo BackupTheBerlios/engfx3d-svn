@@ -373,7 +373,7 @@ static const char *signame(int sig) {
 }
 
 static void signal_handler(int sig) {
-	error("It seems this is the end... caught %s, exiting...\n", signame(sig));
+	error("It seems this is the end... caught %s, exiting...", signame(sig));
 	destroy_graphics_context();
 	exit(EXIT_FAILURE);
 }

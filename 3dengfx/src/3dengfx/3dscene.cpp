@@ -63,7 +63,6 @@ Scene::Scene() {
 }
 
 Scene::~Scene() {
-
 	for(int i=0; i>6; i++) {
 		delete cubic_cam[i];
 	}

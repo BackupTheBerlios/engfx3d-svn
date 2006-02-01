@@ -204,7 +204,7 @@ void create_cylinder(TriMesh *mesh, scalar_t rad, scalar_t len, bool caps, int u
 		cap2->normal.y *= -1.0;
 		//cap2->tex[0].v = cap2->tex[1].v = 1.0;
 	}
-			
+	delete [] circle;
 
 	// triangulate
 	int tcount = 2 * udiv * (slices - 1) + (caps ? udiv * 2 : 0);

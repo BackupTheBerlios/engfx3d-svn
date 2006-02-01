@@ -185,9 +185,6 @@ GeometryArray<Index>::GeometryArray(const Index *data, unsigned long count, bool
 
 void tri_to_index_array(GeometryArray<Index> *ia, const GeometryArray<Triangle> &ta) {
 	ia->dynamic = ta.get_dynamic();
-	ia->data = 0;
-	ia->count = 0;
-	ia->buffer_object = INVALID_VBO;
 
 	unsigned long tcount = ta.get_count();
 	Index *tmp_data = new Index[tcount * 3];
@@ -217,7 +214,9 @@ GeometryArray<Index>::GeometryArray(const GeometryArray<Index> &ga) {
 }
 
 GeometryArray<Index>::~GeometryArray() {
-	if(data) delete [] data;
+	if(data) {
+		delete [] data;
+	}
 #ifdef USING_3DENGFX
 	if(buffer_object != INVALID_VBO) {
 		glDeleteBuffers(1, &buffer_object);
@@ -250,11 +249,8 @@ void GeometryArray<Index>::sync_buffer_object() {
 			std::cerr << get_glerror_string(glerr) << " ";
 		}
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, buffer_object);
-		Index *ptr = (Index*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
 		
-		memcpy(ptr, data, count * sizeof(Index));
-			
-		glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER_ARB, count * sizeof(Index), data, GL_STATIC_DRAW_ARB);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 	}
 #endif	// USING_3DENGFX

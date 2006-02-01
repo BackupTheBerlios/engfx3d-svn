@@ -270,6 +270,7 @@ static int execute_script(DemoScript *ds, unsigned long time) {
 	if(!cmd::command(command.type, command.argv[0], command.argv + 1)) {
 		error("error in demoscript command execution!");
 	}
+	free_command(&command);
 
 	return demo_running ? 0 : -1;
 }

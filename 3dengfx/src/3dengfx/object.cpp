@@ -72,6 +72,10 @@ Object::Object(const TriMesh &mesh) {
 	set_dynamic(false);
 }
 
+Object::~Object() {
+	if(bvol) delete bvol;
+}
+
 void Object::set_mesh(const TriMesh &mesh) {
 	this->mesh = mesh;
 	update_bounding_volume();
