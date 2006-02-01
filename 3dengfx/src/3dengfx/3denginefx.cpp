@@ -315,8 +315,8 @@ SysCaps get_system_capabilities() {
 	info("Programmable pixel processing (glsl): %s", sys_caps.prog.glsl_pixel ? "yes" : "no");
 	info("Point sprites: %s", sys_caps.point_sprites ? "yes" : "no");
 	info("Point parameters: %s", sys_caps.point_params ? "yes" : "no");
+	info("Non power of 2 textures: %s", sys_caps.non_power_of_two_textures ? "yes" : "no");
 	info("Texture units: %d", sys_caps.max_texture_units);
-	info("NPOT textures: %s", sys_caps.non_power_of_two_textures ? "yes" : "no");
 	info("Max lights: %d", sys_caps.max_lights);
 
 	if(!sys_caps.point_sprites && !sys_caps.point_params) {

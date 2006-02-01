@@ -1,5 +1,57 @@
 #!/bin/sh
 
+# this function detects the available C compiler and sets CC
+find_cc()
+{
+	echo 'Detecting C compiler ...'
+	
+	if [ "$CC" = '' ]; then
+		which gcc >/dev/null 2>/dev/null
+		if [ $? = 0 ]; then CC=gcc; fi
+	fi
+
+	if [ "$CC" = '' ]; then
+		which cc >/dev/null 2>/dev/null
+		if [ $? = 0 ]; then CC=cc; fi
+	fi
+
+	if [ "$CC" = '' ]; then
+		echo '**ERROR**: cannot find C compiler, make sure you have cc or gcc in your path, or set the CC env. variable'
+		exit 1
+	else
+		echo "   found: $CC"
+	fi
+}
+
+# this function detects the available C++ compiler and sets CXX
+find_cxx()
+{
+	echo 'Detecting C++ compiler ...'
+	
+	# CXX is empty, try g++...
+	if [ "$CXX" = '' ]; then
+		which g++ >/dev/null 2>/dev/null
+		if [ $? = 0 ]; then CXX=g++; fi
+	fi
+
+	# CXX is empty, try c++...
+	if [ "$CXX" = '' ]; then
+		which c++ >/dev/null 2>/dev/null
+		if [ $? = 0 ]; then CXX=c++; fi
+	fi
+	
+	if [ "$CXX" = '' ]; then
+		echo '**ERROR**: cannot find C++ compiler, make sure you have c++ or g++ in your path, or set the CXX env. variable'
+		exit 1
+	else
+		echo "   found: $CXX"
+	fi
+}
+
+
+# ----------------
+# main script body
+# ----------------
 echo 'configuring 3dengfx ...'
 
 prefix=/usr/local
@@ -9,6 +61,8 @@ jpeg=yes
 ft=yes
 xf86vm=yes
 coord=lhs
+opt=yes
+debug=yes
 
 # on IRIX, disable the XF86VidMode extension by default.
 if [ "`uname -s | grep IRIX`" != "" ]; then
@@ -44,6 +98,18 @@ do
 			coord=rhs;;
 		esac
 		;;
+
+	#enable/disable optimizations
+	--enable-opt)
+		opt=yes;;
+	--disable-opt)
+		opt=no;;
+
+	#enable/disable debugging symbols
+	--enable-debug)
+		debug=yes;;
+	--disable-debug)
+		debug=no;;
 	
 	#enable/disable png support
 	--enable-png)
@@ -74,6 +140,10 @@ do
 		echo '  --prefix=<path>: installation path (default: /usr/local)'
 		echo '  --with-gfxlib=<sdl|glut|native|gtk> (default: native)'
 		echo '  --with-coord=<lhs|rhs> or <dx|gl> (default: lhs)'
+		echo '  --enable-opt: enable speed optimizations (default)'
+		echo '  --disable-opt: disable speed optimizations'
+		echo '  --enable-debug: include debugging symbols (default)'
+		echo '  --disable-debug: do not include debugging symbols'
 		echo '  --enable-png: enable png support, requires libpng (default)'
 		echo '  --disable-png: disable png support'
 		echo '  --enable-jpeg: enable jpeg support, requres libjpeg (default)'
@@ -89,6 +159,11 @@ do
 	esac
 done
 
+find_cc
+find_cxx
+
+echo "optimize for speed: $opt"
+echo "include debugging symbols: $debug"
 echo "prefix: $prefix"
 echo "gfxlib: $gfx"
 echo "coord: $coord"
@@ -96,6 +171,16 @@ echo "png support: $png"
 echo "jpeg support: $jpeg"
 echo "freetype support: $ft"
 echo "video mode switching support: $xf86vm"
+
+# create makefile
+echo 'creating Makefile ...'
+echo '# This makefile is generated from the configure script, DO NOT EDIT!' >Makefile
+echo "PREFIX := $prefix" >>Makefile
+if [ "$debug" = 'yes' ]; then echo "dbg := -g" >>Makefile; fi
+if [ "$opt" = 'yes' ]; then echo "opt := -O3 -ffast-math" >>Makefile; fi
+echo "CC := $CC" >>Makefile
+echo "CXX := $CXX" >>Makefile
+cat 'Makefile.in' >>Makefile
 
 # output config header
 echo 'creating 3dengfx_config.h ...'
@@ -171,5 +256,6 @@ echo '#endif	/* _3DENGFX_CONFIG_H_ */' >>$cfg_file
 # create additional programs
 
 echo 'Creating 3dengfx-config program ...'
-cc -o 3dengfx-config inst/3dengfx_config.c -Isrc
+$CC -o 3dengfx-config inst/3dengfx_config.c -Isrc
+
 

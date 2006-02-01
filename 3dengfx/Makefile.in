@@ -4,17 +4,10 @@ obj :=
 libname := lib3dengfx.so.1.0.0
 soname := lib3dengfx.so.1
 
-#opt := -O3
-opt := -g
 inc_flags := -Isrc -Ilibs -I/usr/local/include
 
 CXXFLAGS := $(opt) -ansi -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
 CFLAGS := $(opt) -std=c89 -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
-
-PREFIX := `grep PREFIX src/3dengfx_config.h | sed 's/^.*\t.//' | sed 's/.$$//'`
-ifeq ($(PREFIX), '')
-	PREFIX := /usr/local
-endif
 
 include src/3dengfx/Makefile-part
 include src/gfx/Makefile-part
