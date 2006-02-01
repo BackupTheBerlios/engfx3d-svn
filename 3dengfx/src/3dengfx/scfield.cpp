@@ -303,6 +303,20 @@ unsigned int ScalarField::get_value_index(int x, int y, int z)
 	return x + y * dimensions + z * dimensions * dimensions;
 }
 
+
+Vector3 ScalarField::def_eval_normals(const Vector3 &vec, scalar_t t) {
+	if(!evaluate) return Vector3(0, 0, 0);
+	
+	Vector3 diff = cell_size * 0.25;
+
+	Vector3 grad;
+	grad.x = evaluate(vec + Vector3(diff.x, 0, 0), t) - evaluate(vec + Vector3(-diff.x, 0, 0), t);
+	grad.y = evaluate(vec + Vector3(0, diff.y, 0), t) - evaluate(vec + Vector3(0, -diff.y, 0), t);
+	grad.z = evaluate(vec + Vector3(0, 0, diff.z), t) - evaluate(vec + Vector3(0, 0, -diff.z), t);
+
+	return grad.normalized();
+}
+
 /* --------------
  * public methods
  * --------------
@@ -612,12 +626,21 @@ void ScalarField::triangulate(TriMesh *mesh, scalar_t isolevel, scalar_t t, bool
 		tarray[i] = tris[i];
 	}
 
-	// calculate normals, if given a funciton
-	if (calc_normals == true && get_normal != 0)
-	{
-		for (unsigned int i=0; i<verts.size(); i++)
-		{
-			varray[i].normal = get_normal(varray[i].pos, t);
+	bool need_normals = calc_normals;
+	
+	// calculate normals if needed
+	if(need_normals) {
+		unsigned int vsz = verts.size();
+		if(get_normal) {
+			for(unsigned int i=0; i<vsz; i++) {
+				varray[i].normal = get_normal(varray[i].pos, t);
+			}
+			need_normals = false;
+		} else if(evaluate) {
+			for(unsigned int i=0; i<vsz; i++) {
+				varray[i].normal = def_eval_normals(varray[i].pos, t);
+			}
+			need_normals = false;
 		}
 	}
 	
@@ -626,10 +649,11 @@ void ScalarField::triangulate(TriMesh *mesh, scalar_t isolevel, scalar_t t, bool
 	delete [] varray;
 	delete [] tarray;
 
-	// calculate normals without external function, if needed
-	if (calc_normals == true && get_normal == 0)
-	{
-		// the vertices are shared correctly
+	// as a final resort, if we could not calculate normals any other way
+	// use the regular mesh normal calculation function.
+	if(need_normals) {
 		mesh->calculate_normals_by_index();
 	}
 }
+
+

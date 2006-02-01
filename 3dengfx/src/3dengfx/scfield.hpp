@@ -58,6 +58,7 @@ protected:
 	void process_cell(int x, int y, int z, scalar_t isolevel);
 
 	unsigned int get_value_index(int x, int y, int z);
+	Vector3 def_eval_normals(const Vector3 &vec, scalar_t t);
 
 public:
 

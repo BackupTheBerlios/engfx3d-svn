@@ -859,7 +859,7 @@ void set_color_write(bool red, bool green, bool blue, bool alpha) {
 
 void set_wireframe(bool enable) {
 	//set_primitive_type(enable ? LINE_LIST : TRIANGLE_LIST);
-	glPolygonMode(GL_FRONT, enable ? GL_LINE : GL_FILL);
+	glPolygonMode(GL_FRONT_AND_BACK, enable ? GL_LINE : GL_FILL);
 }
 	
 
