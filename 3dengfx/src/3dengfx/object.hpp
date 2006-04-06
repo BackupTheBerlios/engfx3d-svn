@@ -73,8 +73,6 @@ extern unsigned long master_render_mode;
 
 class Object : public XFormNode {
 private:
-	TriMesh mesh;
-	Material mat;
 	Matrix4x4 world_mat;
 	RenderParams render_params;
 	BoundingVolume *bvol;
@@ -89,6 +87,9 @@ private:
 	void update_bounding_volume();
 	
 public:
+	TriMesh mesh;
+	Material mat;
+	
 	Object();
 	Object(const TriMesh &mesh);
 	~Object();

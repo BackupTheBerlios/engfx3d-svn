@@ -45,6 +45,12 @@ void *load_tga(FILE *fp, unsigned long *xsz, unsigned long *ysz);
 int save_tga(FILE *fp, void *pixels, unsigned long xsz, unsigned long ysz);
 #endif	/* IMGLIB_USE_TGA */
 
+#ifdef IMGLIB_USE_PPM
+int check_ppm(FILE *fp);
+void *load_ppm(FILE *fp, unsigned long *xsz, unsigned long *ysz);
+int save_ppm(FILE *fp, void *pixels, unsigned long xsz, unsigned long ysz);
+#endif	/* IMGLIB_USE_PPM */
+
 
 static unsigned long save_flags;
 
@@ -74,7 +80,13 @@ void *load_image(const char *fname, unsigned long *xsz, unsigned long *ysz) {
 		return load_tga(file, xsz, ysz);
 	}
 #endif	/* IMGLIB_USE_TGA */
-	
+
+#ifdef IMGLIB_USE_PPM
+	if(check_ppm(file)) {
+		return load_ppm(file, xsz, ysz);
+	}
+#endif	/* IMGLIB_USE_PPM */
+
 	fclose(file);
 	return 0;
 }
@@ -108,6 +120,12 @@ int save_image(const char *fname, void *pixels, unsigned long xsz, unsigned long
 #ifdef IMGLIB_USE_TGA
 		save_tga(fp, pixels, xsz, ysz);
 #endif	/* IMGLIB_USE_TGA */
+		break;
+
+	case IMG_FMT_PPM:
+#ifdef IMGLIB_USE_PPM
+		save_ppm(fp, pixels, xsz, ysz);
+#endif	/* IMGLIB_USE_PPM */
 		break;
 
 	default:

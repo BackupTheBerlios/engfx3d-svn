@@ -6,8 +6,8 @@ soname := lib3dengfx.so.1
 
 inc_flags := -Isrc -Ilibs -I/usr/local/include
 
-CXXFLAGS := $(opt) -ansi -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
-CFLAGS := $(opt) -std=c89 -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
+CXXFLAGS := $(opt) $(dbg) -ansi -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
+CFLAGS := $(opt) $(dbg) -std=c89 -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
 
 include src/3dengfx/Makefile-part
 include src/gfx/Makefile-part

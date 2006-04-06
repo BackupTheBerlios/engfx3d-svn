@@ -92,6 +92,10 @@ bool init() {
 
 	scene->set_shadows(true);
 
+	obj = new ObjTorus(0.5, 2.0, 5);
+	obj->set_position(Vector3(0, 1, -5));
+	scene->add_object(obj);
+
 	timer_reset(&timer);
 	timer_start(&timer);
 

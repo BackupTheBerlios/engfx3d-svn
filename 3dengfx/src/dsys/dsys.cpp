@@ -157,7 +157,11 @@ void dsys::start_part(Part *part) {
 void dsys::stop_part(Part *part) {
 	part->stop();
 	PartTree::iterator iter = parts.find(part->get_name());
-	running.erase(iter);
+	if(iter != running.end()) {
+		running.erase(iter);
+	} else {
+		error("stop_part() called for unknown part: %s\n", part->get_name());
+	}
 }
 
 Part *dsys::get_part(const char *pname) {
