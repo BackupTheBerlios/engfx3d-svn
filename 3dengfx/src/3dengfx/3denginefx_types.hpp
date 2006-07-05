@@ -157,6 +157,7 @@ struct ProgCaps {
 };
 
 struct SysCaps {
+	bool multitex;
 	bool load_transpose;
 	bool gen_mipmaps;
 	bool tex_combine_ops;

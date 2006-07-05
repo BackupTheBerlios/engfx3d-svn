@@ -431,17 +431,13 @@ bool create_graphics_context(int x, int y, bool fullscreen)
 /* OpenGL startup after initialization */
 bool start_gl() {
 	SysCaps sys_caps = get_system_capabilities();
-	if(sys_caps.max_texture_units < 2) {
-		error("%s: Your system does not meet the minimum requirements (at least 2 texture units)", __func__);
-		return false;
-	}
 
 	glext::glActiveTexture = (PFNGLACTIVETEXTUREARBPROC)glGetProcAddress("glActiveTextureARB");
 	glext::glClientActiveTexture = (PFNGLCLIENTACTIVETEXTUREARBPROC)glGetProcAddress("glClientActiveTextureARB");
 	
 	if(!glext::glActiveTexture || !glext::glClientActiveTexture) {
-		error("%s: OpenGL implementation less than 1.3 and could not load multitexturing ARB extensions", __func__);
-		return false;
+		warning("No multitexturing support.");
+		sys_caps.multitex = false;
 	}
 
 	if(sys_caps.load_transpose) {
@@ -500,14 +496,14 @@ bool start_gl() {
 	}
 	
 	if(sys_caps.point_params) {
-		glPointParameterf = (PFNGLPOINTPARAMETERFARBPROC)glGetProcAddress("glPointParameterfARB");
-		glPointParameterfv = (PFNGLPOINTPARAMETERFVARBPROC)glGetProcAddress("glPointParameterfvARB");
+		glext::glPointParameterf = (PFNGLPOINTPARAMETERFARBPROC)glGetProcAddress("glPointParameterfARB");
+		glext::glPointParameterfv = (PFNGLPOINTPARAMETERFVARBPROC)glGetProcAddress("glPointParameterfvARB");
 
-		if(!glPointParameterfv) {
+		if(!glext::glPointParameterfv) {
 			error("error loading glPointParameterfv");
 			return false;
 		}
-		if(!glPointParameterf) {
+		if(!glext::glPointParameterf) {
 			error("error loading glPointParameterf");
 			return false;
 		}
@@ -551,11 +547,11 @@ void set_default_states() {
 	}
 
 	if(sys_caps.point_params) {
-		glPointParameterf(GL_POINT_SIZE_MIN_ARB, 1.0);
-		glPointParameterf(GL_POINT_SIZE_MAX_ARB, 256.0);
+		glext::glPointParameterf(GL_POINT_SIZE_MIN_ARB, 1.0);
+		glext::glPointParameterf(GL_POINT_SIZE_MAX_ARB, 256.0);
 
 		float quadratic[] = {0.0f, 0.0f, 0.01f};
-		glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION_ARB, quadratic);
+		glext::glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION_ARB, quadratic);
 	}
 }
 
@@ -937,10 +933,12 @@ void set_stencil_reference(unsigned int ref) {
 ///////////// texture & material states //////////////
 
 void set_point_sprites(bool enable) {
-	if(enable) {
-		glEnable(GL_POINT_SPRITE_ARB);
-	} else {
-		glDisable(GL_POINT_SPRITE_ARB);
+	if(sys_caps.point_sprites) {
+		if(enable) {
+			glEnable(GL_POINT_SPRITE_ARB);
+		} else {
+			glDisable(GL_POINT_SPRITE_ARB);
+		}
 	}
 }
 
@@ -1048,8 +1046,10 @@ void copy_texture(Texture *tex, bool full_screen) {
 // multitexturing interface
 
 void select_texture_unit(int tex_unit) {
-	glext::glActiveTexture(GL_TEXTURE0 + tex_unit);
-	glext::glClientActiveTexture(GL_TEXTURE0 + tex_unit);
+	if(sys_caps.multitex) {
+		glext::glActiveTexture(GL_TEXTURE0 + tex_unit);
+		glext::glClientActiveTexture(GL_TEXTURE0 + tex_unit);
+	}
 }
 
 void enable_texture_unit(int tex_unit) {
@@ -1100,13 +1100,16 @@ void set_texture_constant(int tex_unit, const Color &col) {
 //void set_texture_coord_generator(int stage, TexGen tgen);
 
 void set_point_sprite_coords(int tex_unit, bool enable) {
-	select_texture_unit(tex_unit);
-	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, enable ? GL_TRUE : GL_FALSE);
+	if(sys_caps.point_params) {
+		select_texture_unit(tex_unit);
+		glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, enable ? GL_TRUE : GL_FALSE);
+	}
 }
 
 
 // programmable interface
 void set_gfx_program(GfxProg *prog) {
+	if(!sys_caps.prog.glslang) return;
 	if(prog) {
 		if(!prog->linked) {
 			prog->link();

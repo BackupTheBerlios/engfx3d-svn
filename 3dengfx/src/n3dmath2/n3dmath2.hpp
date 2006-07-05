@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _N3DMATH2_HPP_
 #define _N3DMATH2_HPP_
 
-
+#include <math.h>
 #include "n3dmath2_types.hpp"
 
 extern const scalar_t e;
@@ -53,9 +53,9 @@ extern const scalar_t error_margin;
 
 #define SQ(x) ((x) * (x))
 
-#ifndef __GNUC__
+#ifndef __GLIBC__
 #define round(x)	((x) >= 0 ? (x) + 0.5 : (x) - 0.5)
-#endif	// __GNUC__
+#endif	// __GLIBC__
 
 // -- mathematical & helper functions --
 scalar_t frand(scalar_t range);

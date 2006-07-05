@@ -18,13 +18,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /* byte order macros.
  * author: John Tsiombikas 2004
+ * modified: John Tsiombikas 2006
  */
 
 #ifndef _BYTEORDER_H_
 #define _BYTEORDER_H_
 
 #include <stdio.h>
-#include <stdint.h>
+#include "types.h"
 
 /*The byte order determination procedure is derived from SDL's SDL_byteorder.h
  * SDL is free software (LGPL), copyright: Sam Lantinga

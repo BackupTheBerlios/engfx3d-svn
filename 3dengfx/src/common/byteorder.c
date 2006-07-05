@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <stdio.h>
-#include <stdint.h>
+#include "byteorder.h"
 
 int8_t read_int8(FILE *fp) {
 	int8_t v;

@@ -1,4 +1,5 @@
-obj += libs/lib3ds/atmosphere.o \
+lib3ds_obj = \
+	libs/lib3ds/atmosphere.o \
 	libs/lib3ds/background.o \
 	libs/lib3ds/camera.o \
 	libs/lib3ds/chunk.o \

@@ -289,6 +289,8 @@ void fxwt::destroy_graphics() {
 }
 
 #ifndef GLX_ARB_get_proc_address
+#include <dlfcn.h>
+
 void *glXGetProcAddress(const char *name) {
 	char *err_str;
 	void *sym;

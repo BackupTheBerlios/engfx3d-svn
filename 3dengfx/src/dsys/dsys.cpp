@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "common/err_msg.h"
 
 #if defined(__unix__) || defined(unix)
+#include <unistd.h>
 #include <sys/stat.h>
 #endif	// unix
 

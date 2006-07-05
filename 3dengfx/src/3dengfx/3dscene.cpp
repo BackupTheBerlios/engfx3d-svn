@@ -565,12 +565,13 @@ bool Scene::render_all_cube_maps(unsigned long msec) const {
 }
 
 #include "fxwt/text.hpp"
-#ifdef __unix__
+#if defined(unix) || defined(__unix__)
+#include <unistd.h>
 #include <sys/stat.h>
 #endif	// __unix__
 
 void Scene::render_sequence(unsigned long start, unsigned long end, int fps, const char *out_dir) {
-#ifdef __unix__
+#if defined(unix) || defined(__unix__)
 	// change to the specified directory
 	char curr_dir[PATH_MAX];
 	getcwd(curr_dir, PATH_MAX);
@@ -609,7 +610,7 @@ void Scene::render_sequence(unsigned long start, unsigned long end, int fps, con
 		time += dt;
 	}
 
-#ifdef __unix__
+#if defined(unix) || defined(__unix__)
 	chdir(curr_dir);
 #endif	// __unix__
 }

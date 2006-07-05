@@ -48,6 +48,31 @@ find_cxx()
 	fi
 }
 
+detect_arch()
+{
+	echo 'Determining architecture flag(s) ...'
+	unm=`uname -m`
+
+	case "$unm" in
+	i*86)
+		arch="-march=$unm"
+		;;
+	IP*)
+		if [ "`file /unix | grep mips-4`" = '' ]; then
+			arch="-mips3"
+		else
+			arch="-mips4"
+		fi
+		;;
+	esac
+
+	if [ "$arch" = '' ]; then
+		echo 'not found, using defaults'
+	else
+		echo "    found: $arch"
+	fi
+}
+
 
 # ----------------
 # main script body
@@ -161,6 +186,7 @@ done
 
 find_cc
 find_cxx
+detect_arch
 
 echo "optimize for speed: $opt"
 echo "include debugging symbols: $debug"
@@ -175,11 +201,12 @@ echo "video mode switching support: $xf86vm"
 # create makefile
 echo 'creating Makefile ...'
 echo '# This makefile is generated from the configure script, DO NOT EDIT!' >Makefile
-echo "PREFIX := $prefix" >>Makefile
-if [ "$debug" = 'yes' ]; then echo "dbg := -g" >>Makefile; fi
-if [ "$opt" = 'yes' ]; then echo "opt := -O3 -ffast-math" >>Makefile; fi
-echo "CC := $CC" >>Makefile
-echo "CXX := $CXX" >>Makefile
+echo "PREFIX = $prefix" >>Makefile
+if [ "$debug" = 'yes' ]; then echo "dbg = -g" >>Makefile; fi
+if [ "$opt" = 'yes' ]; then echo "opt = -O3 -ffast-math" >>Makefile; fi
+if [ "$arch" != '' ]; then echo "arch = $arch" >>Makefile; fi
+echo "CC = $CC" >>Makefile
+echo "CXX = $CXX" >>Makefile
 cat 'Makefile.in' >>Makefile
 
 # output config header
