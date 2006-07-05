@@ -1,6 +1,5 @@
 /*
-This file is part of the graphics core library.
-
+This file is part of the 3dengfx, realtime visualization system.
 Copyright (c) 2004, 2005 John Tsiombikas <nuclear@siggraph.org>
 
 This program is free software; you can redistribute it and/or modify

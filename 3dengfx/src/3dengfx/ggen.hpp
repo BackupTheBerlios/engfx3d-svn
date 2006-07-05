@@ -1,7 +1,7 @@
 /*
 This file is part of the 3dengfx, realtime visualization system.
 
-Copyright (c) 2004, 2005 John Tsiombikas <nuclear@siggraph.org>
+Copyright (c) 2004, 2005, 2006 John Tsiombikas <nuclear@siggraph.org>
 
 3dengfx is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,6 +42,9 @@ void create_torus(TriMesh *mesh, scalar_t circle_rad, scalar_t revolv_rad, int s
 // surfaces of revolution
 void create_revolution(TriMesh *mesh, const Curve &curve, int udiv, int vdiv);
 void create_revolution(TriMesh *mesh, const Vector3 *data, int count, int udiv, int vdiv);
+
+// path extrude
+void create_extrusion(TriMesh *mesh, const Curve &shape, const Curve &path, int ssamples, int slices, scalar_t start_scale = 1.0, scalar_t end_scale = 1.0);
 
 // bezier surface construction
 void create_bezier_patch(TriMesh *mesh, const BezierSpline &u0, const BezierSpline &u1, const BezierSpline &u2, const BezierSpline &u3, int subdiv);

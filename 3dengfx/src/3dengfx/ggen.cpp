@@ -1,7 +1,7 @@
 /*
 This file is part of the 3dengfx, 3d visualization system.
 
-Copyright (c) 2004, 2005 John Tsiombikas <nuclear@siggraph.org>
+Copyright (c) 2004, 2005, 2006 John Tsiombikas <nuclear@siggraph.org>
 
 3dengfx is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -483,6 +483,60 @@ void create_revolution(TriMesh *mesh, const Vector3 *data, int count, int udiv, 
 	spline.set_arc_parametrization(true);
 
 	create_revolution(mesh, spline, udiv, vdiv);
+}
+
+/* create_extrusion - (JT)
+ * Takes a shape and extrudes it along a path.
+ */
+void create_extrusion(TriMesh *mesh, const Curve &shape, const Curve &path, int udiv, int vdiv, scalar_t start_scale, scalar_t end_scale) {
+	if(udiv < 3) udiv = 3;
+	Vector3 *shape_pt = new Vector3[udiv + 1];
+
+	for(int i=0; i<udiv; i++) {
+		shape_pt[i] = shape((scalar_t)i / (scalar_t)udiv);
+	}
+	shape_pt[udiv] = shape_pt[0];
+
+	// extrude along the spline
+	int slices = vdiv + 2;
+	int vcount = (udiv + 1) * slices;
+	Vertex *verts = new Vertex[vcount];
+	scalar_t dt = 1.0 / (vdiv + 1);
+
+	Vertex *vptr = verts;
+	for(int i=0; i<slices; i++) {
+		for(int j=0; j<=udiv; j++) {
+			// XXX FIX THIS
+			vptr->pos = shape_pt[j];
+			vptr->pos.y += dt * i;
+			scalar_t u = (scalar_t)j / (scalar_t)udiv;
+			scalar_t v = (scalar_t)i / (scalar_t)(vdiv + 1);
+			vptr->tex[0] = vptr->tex[1] = TexCoord(u, v);
+			vptr++;
+		}
+	}
+
+	delete [] shape_pt;
+
+	// triangulate
+	int tcount = 2 * udiv * (slices - 1);
+	Triangle *triangles = new Triangle[tcount];
+	Triangle *tptr = triangles;
+	int v = 0;
+	for(int i=0; i<slices-1; i++) {
+		for(int j=0; j<udiv; j++) {
+			*tptr++ = Triangle(v + udiv + 1, v + 1, v + udiv + 2);
+			*tptr++ = Triangle(v + udiv + 1, v, v + 1);
+			v++;
+		}
+		v++;
+	}
+
+	mesh->set_data(verts, vcount, triangles, tcount);
+	mesh->calculate_normals();
+
+	delete [] verts;
+	delete [] triangles;
 }
 
 /* CreateBezierPatch - (MG)

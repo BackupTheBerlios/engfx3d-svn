@@ -1,20 +1,19 @@
 /*
-This file is part of the graphics core library.
-
+This file is part of the 3dengfx, realtime visualization system.
 Copyright (c) 2004, 2005 John Tsiombikas <nuclear@siggraph.org>
 
-the graphics core library is free software; you can redistribute it and/or modify
+the 3dengfx library is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 
-the graphics core library is distributed in the hope that it will be useful,
+the 3dengfx library is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with the graphics core library; if not, write to the Free Software
+along with the 3dengfx library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
@@ -22,7 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * author: John Tsiombikas 2003
  * modified:
- * 		John Tsiombikas 2004, 2005
+ * 		John Tsiombikas 2004, 2005, 2006
  * 		Mihalis Georgoulopoulos 2004
  */
 
@@ -71,17 +70,23 @@ public:
 	friend bool save_curve(const char *fname, const Curve *curve);
 };
 
-class BSplineCurve : public Curve {
+class BSpline : public Curve {
 public:
 	virtual int get_segment_count() const;
 	virtual Vector3 interpolate(scalar_t t) const;
 };
 
-class CatmullRomSplineCurve : public Curve {
+typedef BSpline	BSplineCurve;
+
+
+class CatmullRomSpline : public Curve {
 public:
 	virtual int get_segment_count() const;
 	virtual Vector3 interpolate(scalar_t t) const;
 };
+
+typedef CatmullRomSpline CatmullRomSplineCurve;
+
 
 class BezierSpline : public Curve {
 public:
@@ -90,6 +95,12 @@ public:
 
 	Vector3 get_control_point(int i) const;
 	Vector3 get_tangent(scalar_t t);
+};
+
+class PolyLine : public Curve {
+public:
+	virtual int get_segment_count() const;
+	virtual Vector3 interpolate(scalar_t t) const;
 };
 
 bool save_curve(const char *fname, const Curve *curve);

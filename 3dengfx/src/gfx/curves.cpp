@@ -1,20 +1,19 @@
 /*
-Copyright 2004 John Tsiombikas <nuclear@siggraph.org>
+This file is part of the 3dengfx, realtime visualization system.
+Copyright (C) 2004, 2006 John Tsiombikas <nuclear@siggraph.org>
 
-This file is part of the graphics core library.
-
-the graphics core library is free software; you can redistribute it and/or modify
+the 3dengfx library is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 
-the graphics core library is distributed in the hope that it will be useful,
+the 3dengfx library is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with the graphics core library; if not, write to the Free Software
+along with the 3dengfx library; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
@@ -22,7 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  * 
  * author: John Tsiombikas 2003
  * modified:
- * 		John Tsiombikas 2004
+ * 		John Tsiombikas 2004, 2006
  * 		Mihalis Georgoulopoulos 2004
  */
 
@@ -190,11 +189,11 @@ Vector3 Curve::operator ()(scalar_t t) const {
 
 ///////////////// B-Spline implementation ////////////////////
 
-int BSplineCurve::get_segment_count() const {
+int BSpline::get_segment_count() const {
 	return control_points.size() - 3;
 }
 
-Vector3 BSplineCurve::interpolate(scalar_t t) const {
+Vector3 BSpline::interpolate(scalar_t t) const {
 	if(t > 1.0) t = 1.0;
 	if(t < 0.0) t = 0.0;
 
@@ -213,7 +212,7 @@ Vector3 BSplineCurve::interpolate(scalar_t t) const {
 		t = 1.0f;
 	}
 	
-	ListNode<Vector3> *iter = const_cast<BSplineCurve*>(this)->control_points.begin();
+	ListNode<Vector3> *iter = const_cast<BSpline*>(this)->control_points.begin();
 	for(int i=0; i<seg; i++) iter = iter->next;
 
 	Vector3 Cp[4];
@@ -232,11 +231,11 @@ Vector3 BSplineCurve::interpolate(scalar_t t) const {
 
 //////////////// Catmull-Rom Spline implementation //////////////////
 
-int CatmullRomSplineCurve::get_segment_count() const {
+int CatmullRomSpline::get_segment_count() const {
 	return control_points.size() - 1;
 }
 
-Vector3 CatmullRomSplineCurve::interpolate(scalar_t t) const {
+Vector3 CatmullRomSpline::interpolate(scalar_t t) const {
 	if(t > 1.0) t = 1.0;
 	if(t < 0.0) t = 0.0;
 
@@ -255,38 +254,40 @@ Vector3 CatmullRomSplineCurve::interpolate(scalar_t t) const {
 		t = 1.0f;
 	}
 
-	Vector3 Cp[4];
-	ListNode<Vector3> *iter = const_cast<CatmullRomSplineCurve*>(this)->control_points.begin();
-	for(int i=0; i<seg; i++) iter = iter->next;
+	Vector3 cp[4];
+	ListNode<Vector3> *iter = const_cast<CatmullRomSpline*>(this)->control_points.begin();
+	for(int i=0; i<seg; i++) {
+		iter = iter->next;
+	}
 
-	Cp[1] = iter->data;
-	Cp[2] = iter->next->data;
+	cp[1] = iter->data;
+	cp[2] = iter->next->data;
 	
 	if(!seg) {
-		Cp[0] = Cp[1];
+		cp[0] = cp[1];
 	} else {
-		Cp[0] = iter->prev->data;
+		cp[0] = iter->prev->data;
 	}
 	
 	if(seg == control_points.size() - 2) {
-		Cp[3] = Cp[2];
+		cp[3] = cp[2];
 	} else {
-		Cp[3] = iter->next->next->data;
+		cp[3] = iter->next->next->data;
 	}
 
 	Vector3 res;
-	res.x = catmull_rom_spline(Cp[0].x, Cp[1].x, Cp[2].x, Cp[3].x, t);
-	res.y = catmull_rom_spline(Cp[0].y, Cp[1].y, Cp[2].y, Cp[3].y, t);
-	res.z = catmull_rom_spline(Cp[0].z, Cp[1].z, Cp[2].z, Cp[3].z, t);
+	res.x = catmull_rom_spline(cp[0].x, cp[1].x, cp[2].x, cp[3].x, t);
+	res.y = catmull_rom_spline(cp[0].y, cp[1].y, cp[2].y, cp[3].y, t);
+	res.z = catmull_rom_spline(cp[0].z, cp[1].z, cp[2].z, cp[3].z, t);
 
 	return res;
 }
 
-/* BezierSpline implementation - (MG)
- */
+
+
+/* BezierSpline implementation - (MG) */
 int BezierSpline::get_segment_count() const
 {
-	if (control_points.size() < 0) return 0;
 	return control_points.size() / 4;
 }
 
@@ -373,6 +374,43 @@ Vector3 BezierSpline::get_control_point(int i) const
 }
 
 
+/* ------ polylines (JT) ------ */
+int PolyLine::get_segment_count() const {
+	return control_points.size() - 1;
+}
+
+Vector3 PolyLine::interpolate(scalar_t t) const {
+	if(t > 1.0) t = 1.0;
+	if(t < 0.0) t = 0.0;
+
+	if(control_points.size() < 2) return Vector3(0, 0, 0);
+
+	// TODO: check if this is reasonable for polylines.
+	if(arc_parametrize) {
+		t = ease(parametrize(t));
+	}
+
+	// find the appropriate segment of the spline that t lies and calculate the piecewise parameter
+	t = (scalar_t)(control_points.size() - 1) * t;
+	int seg = (int)t;
+	t -= (scalar_t)floor(t);
+	if(seg >= get_segment_count()) {
+		seg = get_segment_count() - 1;
+		t = 1.0f;
+	}
+
+	Vector3 cp[2];
+	ListNode<Vector3> *iter = const_cast<PolyLine*>(this)->control_points.begin();
+	for(int i=0; i<seg; i++) {
+		iter = iter->next;
+	}
+
+	cp[0] = iter->data;
+	cp[1] = iter->next->data;
+
+	return cp[0] + (cp[1] - cp[0]) * t;
+}
+
 
 bool save_curve(const char *fname, const Curve *curve) {
 	FILE *fp = fopen(fname, "w");
@@ -385,12 +423,14 @@ bool save_curve(const char *fname, const Curve *curve) {
 	fputs(curve->name.c_str(), fp);
 	fputs("\n", fp);
 
-	if(dynamic_cast<const BSplineCurve*>(curve)) {
+	if(dynamic_cast<const BSpline*>(curve)) {
 		fputs("bspline\n", fp);
-	} else if(dynamic_cast<const CatmullRomSplineCurve*>(curve)) {
+	} else if(dynamic_cast<const CatmullRomSpline*>(curve)) {
 		fputs("catmullrom\n", fp);
 	} else if(dynamic_cast<const BezierSpline*>(curve)) {
 		fputs("bezier\n", fp);
+	} else if(dynamic_cast<const PolyLine*>(curve)) {
+		fputs("polyline\n", fp);
 	} else {
 		error("unknown spline type, save failed %s", curve->name.c_str());
 		fclose(fp);
@@ -433,9 +473,9 @@ Curve *load_curve(const char *fname) {
 
 	fgets(buffer, 256, fp);
 	if(!strcmp(buffer, "bspline\n")) {
-		curve = new BSplineCurve;
+		curve = new BSpline;
 	} else if(!strcmp(buffer, "catmullrom\n")) {
-		curve = new CatmullRomSplineCurve;
+		curve = new CatmullRomSpline;
 	} else /*if(!strcmp(buffer, "bezier"))*/ {
 		error("unsupported curve type (%s) or not a curve file", buffer);
 		fclose(fp);
