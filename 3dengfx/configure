@@ -67,7 +67,7 @@ detect_arch()
 	esac
 
 	if [ "$arch" = '' ]; then
-		echo 'not found, using defaults'
+		echo '    not found, using defaults'
 	else
 		echo "    found: $arch"
 	fi

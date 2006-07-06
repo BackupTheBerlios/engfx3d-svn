@@ -277,7 +277,7 @@ Texture *load_cubemap(const char *fname) {
 	}
 
 	char line[512];
-	unsigned int cube_size;
+	unsigned int cube_size = 0;
 	unsigned long xsz = 0, ysz = 0;
 	void *img[6] = {0};
 

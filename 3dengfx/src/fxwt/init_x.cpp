@@ -59,10 +59,8 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 	info("Trying to set video mode %dx%dx%d, d:%d s:%d %s", gparams->x, gparams->y, gparams->bpp, gparams->depth_bits, gparams->stencil_bits, gparams->fullscreen ? "fullscreen" : "windowed");
 	
 	// determine color bits
-	int color_bits;
-	if(gparams->dont_care_flags & DONT_CARE_BPP) {
-		color_bits = 1;
-	} else {
+	int color_bits = 1;
+	if(!(gparams->dont_care_flags & DONT_CARE_BPP)) {
 		switch(gparams->bpp) {
 		case 32:
 		case 24:

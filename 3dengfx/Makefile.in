@@ -1,14 +1,18 @@
-AR = ar
-RM = rm -f
-
 #remember libname's numbers are: ABI version . revision . age
 libname = lib3dengfx.so.1.0.0
 soname = lib3dengfx.so.1
 
 inc_flags = -Isrc -Ilibs -I/usr/local/include
+warn_flags = -Wall -Wno-sign-compare -Wno-strict-aliasing
 
-CXXFLAGS = $(opt) $(arch) $(dbg) -ansi -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
-CFLAGS = $(opt) $(arch) $(dbg) -std=c89 -pedantic -Wall -fPIC $(inc_flags) `./3dengfx-config --cflags`
+CXX = @echo -- compiling $< \(C++\) ...; g++
+CC = @echo -- compiling $< \(C\) ...; gcc
+LINK = @echo -- Linking $< ...; g++
+AR = @echo -- Archiving $< ...; ar
+RM = @echo -- Removing $< ...; rm -f
+
+CXXFLAGS = $(opt) $(arch) $(dbg) -ansi -pedantic $(warn_flags) -fPIC $(inc_flags) `./3dengfx-config --cflags`
+CFLAGS = $(opt) $(arch) $(dbg) -std=c89 -pedantic $(warn_flags) -fPIC $(inc_flags) `./3dengfx-config --cflags`
 
 include src/3dengfx/makefile.part
 include src/gfx/makefile.part
@@ -39,12 +43,10 @@ shared: $(libname)
 static: lib3dengfx.a
 
 $(libname): 3dengfx-config $(obj)
-	$(CXX) -shared -Wl,-soname,$(soname) -o $@ $(obj)
-	@echo '---- shared library created successfully! ----'
+	$(LINK) -shared -Wl,-soname,$(soname) -o $@ $(obj)
 
 lib3dengfx.a: 3dengfx-config $(obj)
 	$(AR) rcs $@ $(obj)
-	@echo '---- static library created successfully! ----'
 
 -include $(obj:.o=.d)
 

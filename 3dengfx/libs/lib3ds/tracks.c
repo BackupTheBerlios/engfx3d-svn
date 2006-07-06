@@ -1371,7 +1371,7 @@ lib3ds_morph_track_read(Lib3dsMorphTrack *track, Lib3dsIo *io)
 {
   /* This function was written by Stephane Denis on 5-18-04 */
     int i;
-    Lib3dsMorphKey *k, *pk;
+    Lib3dsMorphKey *k, *pk = 0;
     int keys;
     track->flags=lib3ds_io_read_word(io);
     lib3ds_io_read_dword(io);
@@ -1413,7 +1413,7 @@ void
 tcb_dump(Lib3dsTcb *tcb)
 {
   printf("  tcb: frame=%d, flags=%04x, tens=%g, cont=%g, ",
-    tcb->frame, tcb->flags, tcb->tens, tcb->cont);
+    (int)tcb->frame, tcb->flags, tcb->tens, tcb->cont);
   printf("bias=%g, ease_to=%g, ease_from=%g\n",
     tcb->bias, tcb->ease_to, tcb->ease_from);
 }
@@ -1423,7 +1423,7 @@ void
 lib3ds_boolTrack_dump(Lib3dsBoolTrack *track)
 {
   Lib3dsBoolKey *key;
-  printf("flags: %08x, keys:\n", track->flags);
+  printf("flags: %08x, keys:\n", (unsigned int)track->flags);
   for( key = track->keyL; key != NULL; key = key->next)
   {
     tcb_dump(&key->tcb);
@@ -1435,7 +1435,7 @@ void
 lib3ds_lin1Track_dump(Lib3dsLin1Track *track)
 {
   Lib3dsLin1Key *key;
-  printf("flags: %08x, keys:\n", track->flags);
+  printf("flags: %08x, keys:\n", (unsigned int)track->flags);
   for( key = track->keyL; key != NULL; key = key->next)
   {
     tcb_dump(&key->tcb);
@@ -1449,7 +1449,7 @@ void
 lib3ds_lin3Track_dump(Lib3dsLin3Track *track)
 {
   Lib3dsLin3Key *key;
-  printf("flags: %08x, keys:\n", track->flags);
+  printf("flags: %08x, keys:\n", (unsigned int)track->flags);
   for( key = track->keyL; key != NULL; key = key->next)
   {
     tcb_dump(&key->tcb);
@@ -1465,7 +1465,7 @@ void
 lib3ds_quatTrack_dump(Lib3dsQuatTrack *track)
 {
   Lib3dsQuatKey *key;
-  printf("flags: %08x, keys:\n", track->flags);
+  printf("flags: %08x, keys:\n", (unsigned int)track->flags);
   for( key = track->keyL; key != NULL; key = key->next)
   {
     tcb_dump(&key->tcb);
@@ -1483,7 +1483,7 @@ void
 lib3ds_morphTrack_dump(Lib3dsMorphTrack *track)
 {
   Lib3dsMorphKey *key;
-  printf("flags: %08x, keys:\n", track->flags);
+  printf("flags: %08x, keys:\n", (unsigned int)track->flags);
   for( key = track->keyL; key != NULL; key = key->next)
   {
     tcb_dump(&key->tcb);
@@ -1541,5 +1541,8 @@ lib3ds_dump_tracks(Lib3dsNode *node)
       printf("pos: ");
       lib3ds_lin3Track_dump(&node->data.spot.pos_track);
       break;
+
+	default:
+	  break;
   }
 }
