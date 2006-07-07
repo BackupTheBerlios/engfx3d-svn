@@ -1052,13 +1052,17 @@ void select_texture_unit(int tex_unit) {
 }
 
 void enable_texture_unit(int tex_unit) {
-	select_texture_unit(tex_unit);
-	glEnable(ttype[tex_unit]);
+	if(!tex_unit || (sys_caps.multitex && tex_unit < sys_caps.max_texture_units)) {
+		select_texture_unit(tex_unit);
+		glEnable(ttype[tex_unit]);
+	}
 }
 
 void disable_texture_unit(int tex_unit) {
-	select_texture_unit(tex_unit);
-	glDisable(ttype[tex_unit]);
+	if(!tex_unit || (sys_caps.multitex && tex_unit < sys_caps.max_texture_units)) {
+		select_texture_unit(tex_unit);
+		glDisable(ttype[tex_unit]);
+	}
 }
 
 void set_texture_unit_color(int tex_unit, TextureBlendFunction op, TextureBlendArgument arg1, TextureBlendArgument arg2, TextureBlendArgument arg3) {

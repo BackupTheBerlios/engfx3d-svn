@@ -272,7 +272,6 @@ bool fxwt::init_graphics(GraphicsInitParameters *gparams) {
 
 void fxwt::destroy_graphics() {
 	info("Shutting down GLX");
-	glXMakeCurrent(fxwt_x_dpy, None, 0);
 	glXDestroyContext(fxwt_x_dpy, glx_ctx);
 	XDestroyWindow(fxwt_x_dpy, fxwt_x_win);
 

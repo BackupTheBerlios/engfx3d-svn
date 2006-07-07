@@ -250,7 +250,10 @@ static const char *find_font_file(const char *font) {
 }
 
 static string gen_key_str(const char *text) {
-	return string(font->family_name) + string("##") + string(text);
+	if(font->family_name) {
+		return string(font->family_name) + string("##") + string(text);
+	}
+	return string(text);
 }
 
 
