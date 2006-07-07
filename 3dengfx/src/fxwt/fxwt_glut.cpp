@@ -32,14 +32,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "3dengfx/3denginefx.hpp"
 #include "common/err_msg.h"
 
-#ifdef __unix__
+#if defined(__unix__) || defined(unix)
 #include <unistd.h>
 #ifdef _POSIX_PRIORITY_SCHEDULING
 #include <sched.h>
 #endif	// _POSIX_PRIORITY_SCHEDULING
 #endif	// __unix__
 
-#ifdef WIN32
+#if defined(WIN32) || defined(__WIN32__)
 #include <windows.h>
 #endif	// WIN32
 

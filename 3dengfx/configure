@@ -205,8 +205,11 @@ echo "PREFIX = $prefix" >>Makefile
 if [ "$debug" = 'yes' ]; then echo "dbg = -g" >>Makefile; fi
 if [ "$opt" = 'yes' ]; then echo "opt = -O3 -ffast-math" >>Makefile; fi
 if [ "$arch" != '' ]; then echo "arch = $arch" >>Makefile; fi
-echo "CC = $CC" >>Makefile
-echo "CXX = $CXX" >>Makefile
+echo "CC = @echo -- compiling $< \\(C\\) ...; $CC" >>Makefile
+echo "CXX = @echo -- compiling $< \\(C++\\) ...; $CXX" >>Makefile
+echo "LINK = @echo -- Linking shared lib ...; $CXX" >>Makefile
+echo "AR = @echo -- Archiving static lib ...; ar" >>Makefile
+echo "RM = @echo -- Removing ...; rm -f" >>Makefile
 cat 'Makefile.in' >>Makefile
 
 # output config header

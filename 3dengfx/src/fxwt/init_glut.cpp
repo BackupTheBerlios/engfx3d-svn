@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* OpenGL through GLUT
  *
  * Author: John Tsiombikas 2005
+ * Modified: John Tsiombikas 2006
  */
 
 #include "3dengfx_config.h"
@@ -133,6 +134,8 @@ void fxwt::destroy_graphics() {
 #include <GL/glx.h>
 
 #ifndef GLX_ARB_get_proc_address
+#include <dlfcn.h>
+
 void *glXGetProcAddress(const char *name) {
 	char *err_str;
 	void *sym;
