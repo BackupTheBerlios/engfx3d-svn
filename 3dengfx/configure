@@ -89,6 +89,8 @@ coord=lhs
 opt=yes
 debug=yes
 
+os=`uname -s`
+
 # on IRIX, disable the XF86VidMode extension by default.
 if [ "`uname -s | grep IRIX`" != "" ]; then
 	xf86vm=no
@@ -205,6 +207,7 @@ echo "PREFIX = $prefix" >>Makefile
 if [ "$debug" = 'yes' ]; then echo "dbg = -g" >>Makefile; fi
 if [ "$opt" = 'yes' ]; then echo "opt = -O3 -ffast-math" >>Makefile; fi
 if [ "$arch" != '' ]; then echo "arch = $arch" >>Makefile; fi
+if [ `uname -s | grep MINGW` = '' ]; then echo "pic = -fPIC" >>Makefile; fi
 echo "CC = @echo -- compiling $< \\(C\\) ...; $CC" >>Makefile
 echo "CXX = @echo -- compiling $< \\(C++\\) ...; $CXX" >>Makefile
 echo "LINK = @echo -- Linking shared lib ...; $CXX" >>Makefile

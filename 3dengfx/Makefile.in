@@ -5,8 +5,8 @@ soname = lib3dengfx.so.1
 inc_flags = -Isrc -Ilibs -I/usr/local/include
 warn_flags = -Wall -Wno-sign-compare -Wno-strict-aliasing -Wno-char-subscripts
 
-CXXFLAGS = $(opt) $(arch) $(dbg) -ansi -pedantic $(warn_flags) -fPIC $(inc_flags) `./3dengfx-config --cflags`
-CFLAGS = $(opt) $(arch) $(dbg) -std=c89 -pedantic $(warn_flags) -fPIC $(inc_flags) `./3dengfx-config --cflags`
+CXXFLAGS = $(opt) $(arch) $(dbg) -ansi -pedantic $(warn_flags) $(pic) $(inc_flags) `./3dengfx-config --cflags`
+CFLAGS = $(opt) $(arch) $(dbg) -std=c89 -pedantic $(warn_flags) $(pic) $(inc_flags) `./3dengfx-config --cflags`
 
 include src/3dengfx/makefile.part
 include src/gfx/makefile.part
@@ -37,7 +37,7 @@ shared: $(libname)
 static: lib3dengfx.a
 
 $(libname): 3dengfx-config $(obj)
-	$(LINK) -shared -Wl,-soname,$(soname) -o $@ $(obj)
+	$(LINK) -shared -Wl,-soname,$(soname) -o $@ $(obj) `./3dengfx-config --libs-no-3dengfx`
 
 lib3dengfx.a: 3dengfx-config $(obj)
 	$(AR) rcs $@ $(obj)

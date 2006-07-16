@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdlib.h>
 #include <png.h>
 #include "color_bits.h"
+#include "common/types.h"
 
 #define FILE_SIG_BYTES	8
 

@@ -19,8 +19,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* type.h finds the appropriate way to define sized integer types
  * and also defines the standard scalar type based on the configuration.
  */
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#ifndef FOO_TYPES_H_
+#define FOO_TYPES_H_
 
 #include "3dengfx_config.h"
 
@@ -32,7 +32,11 @@ typedef double scalar_t;
 
 #include <stdlib.h>		/* to get __GLIBC__ defined if applicable */
 
-#if (__STDC_VERSION__ >= 199900) || defined(__GLIBC__) || defined(__MACH__) || defined(HAVE_STDINT_H)
+#if defined(__MACH__) || defined(__MINGW32__)
+#define HAVE_STDINT_H
+#endif	/* explicitly set stdint.h availability for some platform */
+
+#if (__STDC_VERSION__ >= 199900) || defined(__GLIBC__) || defined(HAVE_STDINT_H)
 #include <stdint.h>
 #elif defined(unix) || defined(__unix__)
 #include <sys/types.h>
@@ -49,4 +53,4 @@ typedef unsigned __int64 uint64_t;
 #error "unsupported platform, or detection failed"
 #endif	/* stdint detection */
 
-#endif	/* _TYPES_H_ */
+#endif	/* FOO_TYPES_H_ */
