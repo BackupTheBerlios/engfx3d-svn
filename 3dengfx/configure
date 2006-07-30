@@ -84,7 +84,7 @@ gfx=native
 png=yes
 jpeg=yes
 ft=yes
-xf86vm=yes
+xf86vm=no
 coord=lhs
 opt=yes
 debug=yes
@@ -177,8 +177,8 @@ do
 		echo '  --disable-jpeg: disable jpeg support'
 		echo '  --enable-ft: enable freetype support (default)'
 		echo '  --disable-ft: disable freetype support'
-		echo '  --enable-xf86vm: enable mode switching capability for native X11 builds (default)'
-		echo '  --disable-xf86vm: disable mode switching capability for native X11 builds'
+		echo '  --enable-xf86vm: enable mode switching capability for native X11 builds'
+		echo '  --disable-xf86vm: disable mode switching capability for native X11 builds (default)'
 		echo '  --help: this help screen'
 		echo 'all invalid options are silently ignored.'
 		exit 0

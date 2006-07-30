@@ -304,6 +304,7 @@ void Object::render_hack(unsigned long time) {
 			select_texture_unit(tex_unit);
 			set_texture(tex_unit, get_normal_cube());
 			enable_texture_unit(tex_unit);
+//			::set_texture_filtering(tex_unit, render_params.tfilter);
 			set_texture_coord_index(tex_unit, 1);	// tex coord with the light vector (UVW)
 			set_texture_unit_color(tex_unit, TOP_DOT3, TARG_TEXTURE, TARG_PREV);
 			set_texture_unit_alpha(tex_unit, TOP_REPLACE, TARG_PREV, TARG_PREV);
@@ -318,6 +319,7 @@ void Object::render_hack(unsigned long time) {
 			set_texture_unit_alpha(tex_unit, TOP_MODULATE, TARG_TEXTURE, TARG_PREV);
 			//tex_id = mat.tex[TEXTYPE_DIFFUSE]->tex_id;
 			::set_texture_addressing(tex_unit, render_params.taddr, render_params.taddr);
+//			::set_texture_filtering(tex_unit, render_params.tfilter);
 			set_matrix(XFORM_TEXTURE, mat.tmat[TEXTYPE_DIFFUSE], 0);
 			tex_unit++;
 		}
@@ -329,12 +331,14 @@ void Object::render_hack(unsigned long time) {
 			set_texture_unit_color(tex_unit, TOP_ADD, TARG_TEXTURE, TARG_PREV);
 			set_texture_unit_color(tex_unit, TOP_MODULATE, TARG_PREV, TARG_TEXTURE);
 			::set_texture_addressing(tex_unit, render_params.taddr, render_params.taddr);
+//			::set_texture_filtering(tex_unit, render_params.tfilter);
 			set_matrix(XFORM_TEXTURE, mat.tmat[TEXTYPE_DIFFUSE], 1);
 			tex_unit++;
 		}
 	
 		if(mat.tex[TEXTYPE_ENVMAP]) {
 			set_texture(tex_unit, mat.tex[TEXTYPE_ENVMAP]);
+//			::set_texture_filtering(tex_unit, render_params.tfilter);
 			enable_texture_unit(tex_unit);
 			set_texture_unit_color(tex_unit, TOP_ADD, TARG_TEXTURE, TARG_PREV);
 			set_texture_unit_alpha(tex_unit, TOP_REPLACE, TARG_PREV, TARG_TEXTURE);
@@ -355,6 +359,7 @@ void Object::render_hack(unsigned long time) {
 
 				::set_texture_addressing(tex_unit, TEXADDR_CLAMP, TEXADDR_CLAMP);
 			} else {
+				::set_texture_addressing(tex_unit, render_params.taddr, render_params.taddr);
 				glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
 				glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
 				glEnable(GL_TEXTURE_GEN_S);
@@ -421,6 +426,7 @@ void Object::render_hack(unsigned long time) {
 			glMatrixMode(GL_MODELVIEW);
 			set_matrix(XFORM_TEXTURE, Matrix4x4::identity_matrix, i);
 			::set_texture_addressing(tex_unit, TEXADDR_WRAP, TEXADDR_WRAP);
+			//::set_texture_filtering(tex_unit, BILINEAR_FILTERING);
 		}
 	}
 
