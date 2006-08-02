@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* higher level 3d object abstraction
  *
  * Author: John Tsiombikas 2004
- * Modified: John Tsiombikas 2005
+ * Modified: John Tsiombikas 2005, 2006
  */
 
 #include "3dengfx_config.h"
@@ -479,6 +479,7 @@ void Object::draw_highlight()
 	std::vector<Edge> *edges = mesh.get_contour_edges(pov, false);
 	
 	set_lighting(false);
+	::set_gfx_program(0);
 
 	glEnable(GL_LINE_SMOOTH);
 	glLineWidth(render_params.highlight_line_width);
