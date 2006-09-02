@@ -404,7 +404,7 @@ PRS XFormNode::get_prs(unsigned long time) const {
 	if(cache.valid && time == cache.time) {
 		return cache.prs;
 	}
-	cache.valid = true;
+	//cache.valid = true;
 	cache.time = time;
 
 	PRS parent_prs;
