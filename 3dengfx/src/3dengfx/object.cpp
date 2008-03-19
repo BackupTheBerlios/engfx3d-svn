@@ -628,3 +628,7 @@ ObjTorus::ObjTorus(scalar_t circle_rad, scalar_t revolv_rad, int subdiv) {
 ObjTeapot::ObjTeapot(scalar_t size, int subdiv) {
 	create_teapot(get_mesh_ptr(), size, subdiv);
 }
+
+ObjLandscape::ObjLandscape(const Vector2 &size, int mesh_detail, scalar_t max_height, int iter, scalar_t roughness, int seed) {
+	create_landscape(get_mesh_ptr(), size, mesh_detail, max_height, iter, roughness, seed);
+}
