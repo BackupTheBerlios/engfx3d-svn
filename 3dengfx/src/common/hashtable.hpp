@@ -59,6 +59,7 @@ public:
 	void remove(KeyType key);
 
 	Pair<KeyType, ValType> *find(KeyType key);
+	Pair<KeyType, ValType> *find_first_val(ValType val);
 
 	void set_data_destructor(void (*destructor)(ValType));
 };
@@ -129,6 +130,20 @@ Pair<KeyType, ValType> *HashTable<KeyType, ValType>::find(KeyType key) {
 		iter++;
 	}
 
+	return 0;
+}
+
+template <class KeyType, class ValType>
+Pair<KeyType, ValType> *HashTable<KeyType, ValType>::find_first_val(ValType val) {
+	for(size_t i=0; i<table.size(); i++) {
+		typename std::list<Pair<KeyType, ValType> >::iterator iter = table[i].begin();
+		while(iter != table[i].end()) {
+			if(iter->val == val) {
+				return &(*iter);
+			}
+			iter++;
+		}
+	}
 	return 0;
 }
 
