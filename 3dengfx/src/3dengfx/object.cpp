@@ -407,8 +407,8 @@ void Object::render_hack(unsigned long time) {
 
 	if(mat.wireframe) ::set_wireframe(false);
 	if((master_render_mode & RMODE_BLENDING) &&
-			(render_params.handle_blending && mat.alpha < 1.0 - small_number) || 
-			(!render_params.handle_blending && render_params.blending)) {
+			((render_params.handle_blending && mat.alpha < 1.0 - small_number) || 
+			(!render_params.handle_blending && render_params.blending))) {
 		set_alpha_blending(false);
 	}
 	if(!render_params.zwrite) ::set_zwrite(true);

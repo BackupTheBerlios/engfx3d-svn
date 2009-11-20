@@ -50,7 +50,7 @@ void Simulation::update() {
 }
 
 void Simulation::update(unsigned long msec) {
-	scalar_t time = (scalar_t)msec / 1000.0;
+	//scalar_t time = (scalar_t)msec / 1000.0;
 	int updates_missed = (int)round((msec - prev_update) / timeslice);
 
 	if(!updates_missed) return;	// less than a timeslice has elapsed, nothing to do

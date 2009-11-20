@@ -326,7 +326,7 @@ SysCaps get_system_capabilities() {
 }
 
 const char *get_glerror_string(GLenum error) {
-	if(!error) return gl_error_string[0x506];
+	if(!error) return gl_error_string[0x506 - 0x500];
 	if(error < 0x500 || error > 0x505) error = 0x507;
 	return gl_error_string[error - 0x500];
 }
